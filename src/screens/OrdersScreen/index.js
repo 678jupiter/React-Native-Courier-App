@@ -64,9 +64,15 @@ const OrdersScreen = ({ navigation }) => {
   if (riderOrders) {
     const i = riderOrders.data;
     const result = i.filter((item) => item.attributes.status === "Ready");
+    //console.log(result);
+    const [
+      {
+        attributes: { dishes },
+      },
+    ] = result;
     return (
       <View style={{ backgroundColor: "lightblue", flex: 1 }}>
-        <MapView
+        {/* <MapView
           style={{
             height,
             width,
@@ -95,7 +101,7 @@ const OrdersScreen = ({ navigation }) => {
               </View>
             </Marker>
           ))}
-        </MapView>
+        </MapView> */}
 
         <BottomSheet index={1} ref={bottomSheetRef} snapPoints={snapPoints}>
           <View style={{ alignItems: "center", marginBottom: 30 }}>
@@ -110,7 +116,7 @@ const OrdersScreen = ({ navigation }) => {
               You're Online
             </Text>
             <Text style={{ letterSpacing: 0.5, color: "grey" }}>
-              Available Orders: {i.length}
+              Available Orders: {result.length}
             </Text>
           </View>
           {result ? (
@@ -126,20 +132,26 @@ const OrdersScreen = ({ navigation }) => {
                       borderWidth: 2,
                       borderRadius: 12,
                     }}
-                    onPress={() =>
-                      navigation.navigate("OrdersDeliveryScreen", {
-                        id: `${item.id}`,
-                        latitude: `${item.attributes.Latitude}`,
-                        longitude: `${item.attributes.Longitude}`,
-                        address: `${item.attributes.address}`,
-                        building: `${item.attributes.buildinginfo}`,
-                        status: `${item.attributes.status}`,
-
-                        // console.log(item.attributes.Latitude)
-                      })
+                    onPress={
+                      () =>
+                        navigation.navigate("OrdersDeliveryScreen", {
+                          Odishes: item.attributes.dishes,
+                          id: `${item.id}`,
+                          latitude: `${item.attributes.Latitude}`,
+                          longitude: `${item.attributes.Longitude}`,
+                          address: `${item.attributes.address}`,
+                          building: `${item.attributes.buildinginfo}`,
+                          status: `${item.attributes.status}`,
+                        })
+                      // console.log(item.attributes.Latitude)
                     }
                   >
-                    {/* <Image
+                    <View
+                      style={{ flex: 1, marginLeft: 10, paddingVertical: 5 }}
+                    >
+                      {dishes.map((dish) => (
+                        <View key={dish.id}>
+                          {/* <Image
               source={{ uri: order.Restaurant.image }}
               style={{
                 width: "25%",
@@ -148,18 +160,16 @@ const OrdersScreen = ({ navigation }) => {
                 borderTopLeftRadius: 10,
               }}
             /> */}
-                    <View
-                      style={{ flex: 1, marginLeft: 10, paddingVertical: 5 }}
-                    >
-                      <Text style={{ fontSize: 18, fontWeight: "500" }}>
-                        order.Restaurant.name
-                      </Text>
-                      <Text style={{ color: "grey" }}>
-                        order.Restaurant.address
-                      </Text>
+                          <Text style={{ fontSize: 18, fontWeight: "500" }}>
+                            {dish.restaurantName}
+                          </Text>
+                          <Text style={{ color: "grey" }}>
+                            {dish.restaurantAddress}
+                          </Text>
+                        </View>
+                      ))}
 
                       <Text style={{ marginTop: 10 }}>Delivery Details:</Text>
-
                       <Text style={{ color: "grey" }}>
                         {item.attributes.userName}
                       </Text>

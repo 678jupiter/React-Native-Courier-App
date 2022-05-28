@@ -7,14 +7,18 @@ import {
   Pressable,
 } from "react-native";
 import BottomSheet from "@gorhom/bottom-sheet";
-import { FontAwesome5, Fontisto } from "@expo/vector-icons";
+import {
+  FontAwesome5,
+  Fontisto,
+  AntDesign,
+  Entypo,
+  Ionicons,
+} from "@expo/vector-icons";
 import orders from "../../../assets/data/orders.json";
 import styles from "./styles";
 import MapView, { Marker } from "react-native-maps";
 import * as Location from "expo-location";
-import { Entypo, MaterialIcons, Ionicons } from "@expo/vector-icons";
 import MapViewDirections from "react-native-maps-directions";
-import { gql, useQuery } from "@apollo/client";
 import axios from "axios";
 
 const order = orders[0];
@@ -30,23 +34,82 @@ const OrderDelivery = ({ route, navigation }) => {
   const { longitude } = route.params;
   const { address } = route.params;
   const { building } = route.params;
-  const { status } = route.params;
-
+  //const { status } = route.params;
+  const { Odishes } = route.params;
+  const [status, setStatus] = useState("Ready");
+  console.log(latitude, longitude);
+  // const deliveryLocation = {
+  //   latitude,
+  //   longitude,
+  // };
   const deliveryLocation = {
-    latitude: latitude,
-    longitude: longitude,
+    latitude: -1.2529133,
+    longitude: 36.715615,
   };
 
-  const updateStatus = () => {
+  const getCurrentOrderById = () => {
     axios
-      .put(`http://localhost:1337/api/restaurant-orders/${id}`, {
+      .get(`https://myfoodcms189.herokuapp.com/api/restaurant-orders/${id}`, {})
+      .then(function (res) {
+        // console.log(res.data);
+        const {
+          data: {
+            attributes: { status },
+          },
+        } = res.data;
+        console.log(status);
+        setStatus(status);
+      })
+      .catch(function (error) {
+        console.log(error);
+      });
+  };
+  // useEffect(() => {
+  //   getCurrentOrderById();
+  // });
+
+  const Accepted = () => {
+    axios
+      .put(`https://myfoodcms189.herokuapp.com/api/restaurant-orders/${id}`, {
         data: {
-          status: "Cooking",
+          status: "Accepted",
         },
       })
       .then(function (response) {
         console.log(response);
-        refetch();
+        setDeliveryStatus(ORDER_STATUSES.ACCEPTED);
+      })
+      .catch(function (error) {
+        console.log(error);
+      });
+  };
+
+  const PickedUp = () => {
+    axios
+      .put(`https://myfoodcms189.herokuapp.com/api/restaurant-orders/${id}`, {
+        data: {
+          status: "PickedUp",
+        },
+      })
+      .then(function (response) {
+        console.log(response);
+        setDeliveryStatus(ORDER_STATUSES.ACCEPTED);
+      })
+      .catch(function (error) {
+        console.log(error);
+      });
+  };
+
+  const Delivering = () => {
+    axios
+      .put(`https://myfoodcms189.herokuapp.com/api/restaurant-orders/${id}`, {
+        data: {
+          status: "Delivering",
+        },
+      })
+      .then(function (response) {
+        console.log(response);
+        setDeliveryStatus(ORDER_STATUSES.ACCEPTED);
       })
       .catch(function (error) {
         console.log(error);
@@ -98,6 +161,22 @@ const OrderDelivery = ({ route, navigation }) => {
           latitude: updatedLocation.coords.latitude,
           longitude: updatedLocation.coords.longitude,
         });
+        axios
+          .put(
+            `https://myfoodcms189.herokuapp.com/api/restaurant-orders/${id}`,
+            {
+              data: {
+                courierLat: JSON.stringify(updatedLocation.coords.latitude),
+                courierLng: JSON.stringify(updatedLocation.coords.longitude),
+              },
+            }
+          )
+          .then(function (response) {
+            console.log("Updated");
+          })
+          .catch(function (error) {
+            console.log(error);
+          });
       }
     );
     return foregroundSubscription;
@@ -106,9 +185,9 @@ const OrderDelivery = ({ route, navigation }) => {
   if (!driverLocation) {
     return <ActivityIndicator size={"large"} />;
   }
-  console.log(driverLocation);
+  //console.log(driverLocation);
   const onButtonpressed = () => {
-    if (deliveryStatus === ORDER_STATUSES.READY_FOR_PICKUP) {
+    if (status === "Ready") {
       bottomSheetRef.current?.collapse();
       mapRef.current.animateToRegion({
         latitude: driverLocation.latitude,
@@ -116,41 +195,41 @@ const OrderDelivery = ({ route, navigation }) => {
         latitudeDelta: 0.01,
         longitudeDelta: 0.01,
       });
-      setDeliveryStatus(ORDER_STATUSES.ACCEPTED);
+      // Accepted();
+      setStatus("Accepted");
     }
-    if (deliveryStatus === ORDER_STATUSES.ACCEPTED) {
+    if (deliveryStatus === "Accepted") {
       bottomSheetRef.current?.collapse();
       setDeliveryStatus(ORDER_STATUSES.PICKED_UP);
     }
-    if (deliveryStatus === ORDER_STATUSES.PICKED_UP) {
+    if (status === "PickedUp") {
       bottomSheetRef.current?.collapse();
       navigation.goBack();
       console.warn("Delivery Finished");
     }
   };
+  console.log(status);
 
   const renderButtonTitle = () => {
-    if (deliveryStatus === ORDER_STATUSES.READY_FOR_PICKUP) {
+    if (status === "Ready") {
       return "Accept Order";
     }
-    if (deliveryStatus === ORDER_STATUSES.ACCEPTED) {
+    if (status === "Accepted") {
       return "Pick-Up Order";
     }
-    if (deliveryStatus === ORDER_STATUSES.PICKED_UP) {
+    if (status === "PickedUp") {
       return "Complete Delivery";
     }
   };
 
   const isButtonDisabled = () => {
-    if (deliveryStatus === ORDER_STATUSES.READY_FOR_PICKUP) {
+    if (status === "Ready") {
       return false;
     }
-    if (deliveryStatus === ORDER_STATUSES.ACCEPTED && isDriverClose) {
+    if ((status === "ACCEPTED" || status === "PickedUp") && isDriverClose) {
       return false;
     }
-    if (deliveryStatus === ORDER_STATUSES.PICKED_UP && isDriverClose) {
-      return false;
-    }
+
     return true;
   };
 
@@ -168,13 +247,13 @@ const OrderDelivery = ({ route, navigation }) => {
           longitudeDelta: 0.07,
         }}
       >
-        <MapViewDirections
+        {/* <MapViewDirections
           origin={driverLocation}
           destination={
             status === "Ready" ? restaurantLocation : deliveryLocation
           }
           strokeWidth={10}
-          waypoints={status === "READY" ? [restaurantLocation] : []}
+          waypoints={status === "Ready" ? [restaurantLocation] : []}
           strokeColor="#3FC060"
           apikey={"AIzaSyDtiFFwZ-LI0PT8ehVGFb42mefaC-bOLfI"}
           onReady={(result) => {
@@ -182,7 +261,7 @@ const OrderDelivery = ({ route, navigation }) => {
             setTotalMinutes(result.duration);
             setTotalKm(result.distance);
           }}
-        />
+        /> */}
         <Marker
           coordinate={{
             latitude: order.Restaurant.lat,
@@ -197,11 +276,10 @@ const OrderDelivery = ({ route, navigation }) => {
             <Entypo name="shop" size={30} color="white" />
           </View>
         </Marker>
-
         <Marker
           coordinate={{
-            latitude: order.User.lat,
-            longitude: order.User.lng,
+            latitude: Number(deliveryLocation.latitude),
+            longitude: Number(deliveryLocation.longitude),
           }}
           title={order.User.name}
           description={order.User.address}
@@ -209,11 +287,26 @@ const OrderDelivery = ({ route, navigation }) => {
           <View
             style={{ backgroundColor: "green", padding: 5, borderRadius: 20 }}
           >
-            <MaterialIcons name="restaurant" size={30} color="white" />
+            <AntDesign name="user" size={24} color="white" />
           </View>
         </Marker>
+
+        {/* <Marker
+          coordinate={{
+            latitude: Number(latitude),
+            longitude: Number(longitude),
+          }}
+          title={order.User.name}
+          description={order.User.address}
+        >
+          <View
+            style={{ backgroundColor: "green", padding: 5, borderRadius: 20 }}
+          >
+            <AntDesign name="user" size={24} color="white" />
+          </View>
+        </Marker> */}
       </MapView>
-      {deliveryStatus === ORDER_STATUSES.READY_FOR_PICKUP && (
+      {status === "Ready" && (
         <Ionicons
           onPress={() => navigation.goBack()}
           name="arrow-back-circle"
@@ -240,23 +333,24 @@ const OrderDelivery = ({ route, navigation }) => {
           <Text style={styles.routeDetailsText}>{totalKm.toFixed(2)} km</Text>
         </View>
         <View style={styles.deliveryDetailsContainer}>
-          <Text style={styles.restaurantName}>{order.Restaurant.name}</Text>
-          <View style={styles.adressContainer}>
-            <Fontisto name="shopping-store" size={22} color="grey" />
-            <Text style={styles.adressText}>{order.Restaurant.address}</Text>
-          </View>
-
-          <View style={styles.adressContainer}>
-            <FontAwesome5 name="map-marker-alt" size={30} color="grey" />
-            <Text style={styles.adressText}>{order.User.address}</Text>
-          </View>
-
-          <View style={styles.orderDetailsContainer}>
-            <Text style={styles.orderItemText}>Onion Rings x1</Text>
-            <Text style={styles.orderItemText}>Big Mac x3</Text>
-            <Text style={styles.orderItemText}>Big Tasty x2</Text>
-            <Text style={styles.orderItemText}>Coca-Cola x1</Text>
-          </View>
+          {Odishes.map((item) => (
+            <View key={item.id}>
+              <Text style={styles.restaurantName}>{item.restaurantName}</Text>
+              <View style={styles.adressContainer}>
+                <Fontisto name="shopping-store" size={22} color="grey" />
+                <Text style={styles.adressText}>{item.restaurantAddress}</Text>
+              </View>
+              <View style={styles.adressContainer}>
+                <FontAwesome5 name="map-marker-alt" size={30} color="grey" />
+                <Text style={styles.adressText}>{address}</Text>
+              </View>
+              <View style={styles.orderDetailsContainer}>
+                <View>
+                  <Text style={styles.orderItemText}>{item.name}</Text>
+                </View>
+              </View>
+            </View>
+          ))}
         </View>
         <Pressable
           style={{

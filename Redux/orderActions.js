@@ -3,7 +3,9 @@ import { orderActions } from "./OrderSlice";
 export const fetchOrders = () => {
   return async (dispatch) => {
     const fetchHandler = async () => {
-      const res = await fetch("http://localhost:1337/api/restaurant-orders");
+      const res = await fetch(
+        "https://myfoodcms189.herokuapp.com/api/restaurant-orders"
+      );
       const data = await res.json();
       return data;
     };

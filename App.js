@@ -43,8 +43,7 @@ export default function App() {
         <ApolloProvider client={client}>
           <NavigationContainer>
             <GestureHandlerRootView style={{ flex: 1 }}>
-              {/* <Navigation /> */}
-              <Track />
+              <Navigation />
             </GestureHandlerRootView>
             <StatusBar style="auto" />
           </NavigationContainer>
