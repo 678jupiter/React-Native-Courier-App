@@ -1,12 +1,18 @@
-import { useRef, useMemo } from "react";
-import { View, Text, FlatList, useWindowDimensions, Image } from "react-native";
+import { useRef, useMemo, useEffect } from "react";
+import {
+  View,
+  Text,
+  useWindowDimensions,
+  ActivityIndicator,
+} from "react-native";
 import BottomSheet, { BottomSheetFlatList } from "@gorhom/bottom-sheet";
-import orders from "../../../assets/data/orders.json";
-import OrderItem from "../../components/OrderItem";
 import MapView, { Marker } from "react-native-maps";
 import { Entypo } from "@expo/vector-icons";
-import { gql, useQuery } from "@apollo/client";
+import { gql } from "@apollo/client";
 import Pressable from "react-native/Libraries/Components/Pressable/Pressable";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchOrders } from "../../../Redux/orderActions";
+import { colors } from "../../../config";
 
 const GET_READY_ORDERS = gql`
   {
@@ -35,28 +41,29 @@ const GET_READY_ORDERS = gql`
 `;
 
 const OrdersScreen = ({ navigation }) => {
-  const { loading, error, data, refetch } = useQuery(GET_READY_ORDERS);
+  const dispatch = useDispatch();
+  useEffect(() => {
+    dispatch(fetchOrders());
+  }, [dispatch]);
 
+  const riderOrders = useSelector((state) => state.orders.riderOrders);
+
+  // console.log(result);
   const bottomSheetRef = useRef(null);
   const { width, height } = useWindowDimensions();
 
   const snapPoints = useMemo(() => ["12%", "95%"], []);
-  if (loading)
+
+  if (riderOrders.length === 0) {
     return (
-      <View
-        style={{ justifyContent: "center", alignContent: "center", flex: 1 }}
-      >
-        <Text>Loading...</Text>
+      <View style={{ justifyContent: "center", alignItems: "center", flex: 1 }}>
+        <ActivityIndicator size="large" color={colors.colors} />
       </View>
     );
-
-  if (error) {
-    return <Text>Error </Text>;
   }
-  if (data) {
-    const i = data.restaurantOrders.data;
+  if (riderOrders) {
+    const i = riderOrders.data;
     const result = i.filter((item) => item.attributes.status === "Ready");
-
     return (
       <View style={{ backgroundColor: "lightblue", flex: 1 }}>
         <MapView
@@ -67,7 +74,7 @@ const OrdersScreen = ({ navigation }) => {
           showsUserLocation
           followsUserLocation
         >
-          {orders.map((order) => (
+          {riderOrders.map((order) => (
             <Marker
               key={order.id}
               title={order.Restaurant.name}
@@ -189,6 +196,12 @@ const OrdersScreen = ({ navigation }) => {
             <Text>No Orders</Text>
           )}
         </BottomSheet>
+      </View>
+    );
+  } else {
+    return (
+      <View style={{ justifyContent: "center", alignItems: "center", flex: 1 }}>
+        <Text>No jobs.</Text>
       </View>
     );
   }

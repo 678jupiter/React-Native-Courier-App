@@ -13,23 +13,24 @@ import { primaryColor, secondaryColor } from "../../../config";
 import { TextInput as MytextInput } from "react-native";
 import KeyboardScrollUpForms from "../../../utils/KeyboardScrollUpForms";
 import { useState } from "react";
-import { login } from "../../../lib/auth";
+import { login, registerUser } from "../../../lib/auth";
 import { useDispatch, useSelector } from "react-redux";
 import { userActions } from "../../../Redux/userSlice";
 import { authActions } from "../../../Redux/AuthSlice";
 
-const LogIn = ({ navigation }) => {
-  const [identifier, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+const Register = ({ navigation }) => {
+  const [username, setFirstName] = useState("");
+  const [email, setEmail] = useState("");
+  const [mobileNumber, setPhoneNumber] = useState("");
+  const [password, SetPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const dispatch = useDispatch();
 
   const handlePasswordVisibility = () => {};
   const handleSubmit = async () => {
     try {
-      await login(identifier, password)
+      registerUser(username, email, password, mobileNumber)
         .then((res) => {
-          setIsSubmitting(true);
           dispatch(
             userActions.addUser({
               jwt: res.data.jwt,
@@ -41,14 +42,11 @@ const LogIn = ({ navigation }) => {
             }),
             dispatch(authActions.login())
           );
-          setIsSubmitting(false);
         })
         .catch((error) => {
-          setIsSubmitting(false);
           console.log("2" + error);
         });
     } catch (error) {
-      setIsSubmitting(false);
       console.log("1" + error);
     }
   };
@@ -61,19 +59,39 @@ const LogIn = ({ navigation }) => {
         enabled
         behavior={Platform.OS == "ios" ? "padding" : "height"}
       >
-        {/* {Platform.OS === "android" && <StatusBar backgroundColor="#000000" />} */}
-
         <ScrollView
           contentInsetAdjustmentBehavior="automatic"
           showsVerticalScrollIndicator={false}
         >
-          <Space height={space} />
-          <Header
-            // title="Login"
-            desc="For fast delivering, login first. 🤝"
-          />
-          <View style={styles.container}>
+          {/* <Space height={space_height} /> */}
+          {/* <Header title="Register" showDesc={false} /> */}
+          {/* <Space height={8} /> */}
+          <View style={styles.mainContainer}>
+            {/* <View style={styles.avaForm}>
+            <View style={styles.avaBorder}>
+              <TouchableScale
+                tension={100}
+                onPress={() => console.log("register")}
+              >
+                <View style={styles.addAvaTextContainer}>
+                  <Text style={styles.addAvaText}>Add Avatar</Text>
+                </View>
+              </TouchableScale>
+            </View>
+          </View> */}
+            <TextInput
+              label="Username"
+              onChangeText={(text) => setFirstName(text)}
+            />
+
+            <Space height={30} />
             <TextInput label="Email" onChangeText={(text) => setEmail(text)} />
+            <Space height={30} />
+            <TextInput
+              label="PhoneNumber"
+              onChangeText={(text) => setPhoneNumber(text)}
+              keyboardType="number-pad"
+            />
             <Space height={30} />
             <View>
               <Text style={styles.label}>Password</Text>
@@ -81,9 +99,9 @@ const LogIn = ({ navigation }) => {
               <View style={styles.inputContainer}>
                 <MytextInput
                   style={styles.inputField}
-                  onChangeText={(text) => setPassword(text)}
+                  onChangeText={(text) => SetPassword(text)}
                   value={password}
-                  //  secureTextEntry={passwordVisibility}
+                  // secureTextEntry={passwordVisibility}
                 />
                 <Pressable onPress={handlePasswordVisibility}>
                   {/* <MaterialCommunityIcons
@@ -94,14 +112,12 @@ const LogIn = ({ navigation }) => {
                 </Pressable>
               </View>
             </View>
-
             {/* <Space height={25} />
-            <MsgBox type={messageType}>{message}</MsgBox>
-            */}
+            <MsgBox type={messageType}>{message}</MsgBox> */}
             <Space height={25} />
 
             <Button
-              label="Log In"
+              label="Register"
               radius={6}
               txtSize={14}
               bgColor={secondaryColor}
@@ -112,54 +128,67 @@ const LogIn = ({ navigation }) => {
               onPress={handleSubmit}
               isSubmitting={isSubmitting}
             />
-
-            <Space height={40} />
-            <Button
-              label="Register a new account"
-              txtSize={13}
-              radius={0}
-              borderWidth={0}
-              bgColor="#fff"
-              textColor={primaryColor}
-              fontFam="CircularStdBold"
-              onPress={() => navigation.navigate("Register")}
-            />
-            <Space height={20} />
-            <Button
-              label="Forgot password"
-              txtSize={12}
-              radius={0}
-              borderWidth={0}
-              bgColor="#fff"
-              textColor={primaryColor}
-              fontFam="CircularStdBold"
-              onPress={() => navigation.navigate("ForgotPassword")}
-            />
+            <Space height={50} />
           </View>
         </ScrollView>
       </KeyboardScrollUpForms>
       {/* <FlashMessage
-        // ref={showMessage}
-        style={{ backgroundColor: 'red' }}
-        textStyle={{ fontFamily: 'CircularStdBold' }}
-        hideOnPress={true}
-        duration={4000}
-      /> */}
+      // ref={showMessage}2342e 
+      hideOnPress={true}
+      duration={4000}
+      style={{ backgroundColor: 'red' }}
+      textStyle={{ fontFamily: 'CircularStdBold' }}
+    /> */}
     </SafeAreaView>
   );
 };
 
+export default Register;
 const styles = StyleSheet.compose({
   page: {
     flex: 1,
     backgroundColor: "#fff",
+    // backgroundColor: 'red',
   },
-  container: {
+  mainContainer: {
     backgroundColor: "#fff",
+    // backgroundColor: 'red',
     paddingHorizontal: 24,
-    paddingVertical: 24,
+    paddingBottom: 24,
+    paddingTop: 24,
     marginTop: 0,
     flex: 1,
+  },
+  avaForm: {
+    alignItems: "center",
+    marginTop: 0,
+    marginBottom: 30,
+  },
+  avaBorder: {
+    borderRadius: 120,
+    height: 120,
+    width: 120,
+    borderStyle: "solid",
+    borderColor: "#0030FF",
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  addAvaTextContainer: {
+    borderRadius: 90,
+    height: 100,
+    width: 100,
+    backgroundColor: "#0030FF",
+    padding: 20,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  addAvaText: {
+    fontSize: 14,
+    fontFamily: "CircularStdBold",
+    color: "#fff",
+    textAlign: "center",
+    // backgroundColor: 'red',
   },
   msgBox: {
     fontFamily: "CircularStdBold",
@@ -191,6 +220,15 @@ const styles = StyleSheet.compose({
   inputField: {
     width: "90%",
   },
+  inputText: {
+    fontFamily: "CircularStdBook",
+    fontSize: 14,
+    color: "#000",
+    paddingVertical: 14,
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    borderRadius: 6,
+    borderStyle: "solid",
+    borderColor: "#32cd32",
+  },
 });
-
-export default LogIn;

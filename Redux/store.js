@@ -4,6 +4,8 @@ import { combineReducers } from "redux";
 
 import authSlice from "./AuthSlice";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import userSlice from "./userSlice";
+import orderSlice from "./OrderSlice";
 
 const persistConfig = {
   key: "ayee",
@@ -12,6 +14,8 @@ const persistConfig = {
 
 const reducers = combineReducers({
   auth: authSlice.reducer,
+  user: userSlice.reducer,
+  orders: orderSlice.reducer,
   // other reducers goes here...
 });
 
