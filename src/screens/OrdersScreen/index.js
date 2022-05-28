@@ -70,9 +70,10 @@ const OrdersScreen = ({ navigation }) => {
         attributes: { dishes },
       },
     ] = result;
+    console.log(dishes);
     return (
       <View style={{ backgroundColor: "lightblue", flex: 1 }}>
-        {/* <MapView
+        <MapView
           style={{
             height,
             width,
@@ -80,14 +81,14 @@ const OrdersScreen = ({ navigation }) => {
           showsUserLocation
           followsUserLocation
         >
-          {riderOrders.map((order) => (
+          {dishes.map((item) => (
             <Marker
-              key={order.id}
-              title={order.Restaurant.name}
-              description={order.Restaurant.address}
+              key={item.id}
+              title={item.restaurantName}
+              description={item.restaurantAddress}
               coordinate={{
-                latitude: order.Restaurant.lat,
-                longitude: order.Restaurant.lng,
+                latitude: Number(item.restaurantLng),
+                longitude: Number(item.restaurantLtd),
               }}
             >
               <View
@@ -101,7 +102,7 @@ const OrdersScreen = ({ navigation }) => {
               </View>
             </Marker>
           ))}
-        </MapView> */}
+        </MapView>
 
         <BottomSheet index={1} ref={bottomSheetRef} snapPoints={snapPoints}>
           <View style={{ alignItems: "center", marginBottom: 30 }}>
