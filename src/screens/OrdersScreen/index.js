@@ -1,4 +1,4 @@
-import { useRef, useMemo, useEffect } from "react";
+import React, { useRef, useMemo, useEffect } from "react";
 import {
   View,
   Text,
@@ -13,6 +13,7 @@ import Pressable from "react-native/Libraries/Components/Pressable/Pressable";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchOrders } from "../../../Redux/orderActions";
 import { colors } from "../../../config";
+import { useFocusEffect } from "@react-navigation/native";
 
 const GET_READY_ORDERS = gql`
   {
@@ -43,9 +44,18 @@ const GET_READY_ORDERS = gql`
 const OrdersScreen = ({ navigation }) => {
   const dispatch = useDispatch();
   useEffect(() => {
+    let isCancelled = false;
     dispatch(fetchOrders());
+    return () => {
+      isCancelled = true;
+    };
   }, [dispatch]);
 
+  useFocusEffect(
+    React.useCallback(() => {
+      dispatch(fetchOrders());
+    }, [])
+  );
   const riderOrders = useSelector((state) => state.orders.riderOrders);
 
   // console.log(result);
@@ -61,10 +71,10 @@ const OrdersScreen = ({ navigation }) => {
       </View>
     );
   }
-  if (riderOrders) {
-    const i = riderOrders.data;
-    const result = i.filter((item) => item.attributes.status === "Ready");
-    //console.log(result);
+  const i = riderOrders.data;
+  const result = i.filter((item) => item.attributes.status === "Ready");
+  //console.log(result);
+  if (result.length !== 0) {
     const [
       {
         attributes: { dishes },
@@ -81,7 +91,7 @@ const OrdersScreen = ({ navigation }) => {
           showsUserLocation
           followsUserLocation
         >
-          {dishes.map((item) => (
+          {dishes?.map((item) => (
             <Marker
               key={item.id}
               title={item.restaurantName}
@@ -138,8 +148,8 @@ const OrdersScreen = ({ navigation }) => {
                         navigation.navigate("OrdersDeliveryScreen", {
                           Odishes: item.attributes.dishes,
                           id: `${item.id}`,
-                          latitude: `${item.attributes.Latitude}`,
-                          longitude: `${item.attributes.Longitude}`,
+                          customerLatitude: `${item.attributes.Latitude}`,
+                          customerLongitude: `${item.attributes.Longitude}`,
                           address: `${item.attributes.address}`,
                           building: `${item.attributes.buildinginfo}`,
                           status: `${item.attributes.status}`,

@@ -5,6 +5,7 @@ import {
   useWindowDimensions,
   ActivityIndicator,
   Pressable,
+  Platform,
 } from "react-native";
 import BottomSheet from "@gorhom/bottom-sheet";
 import {
@@ -20,31 +21,73 @@ import MapView, { Marker } from "react-native-maps";
 import * as Location from "expo-location";
 import MapViewDirections from "react-native-maps-directions";
 import axios from "axios";
+import * as Device from "expo-device";
+import * as Notifications from "expo-notifications";
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
+const STATUS_TO_TITLE = {
+  Ready: "Accept Order",
+  Accepted: "Pick-Up Order",
+  PickedUp: "Complete Delivery",
+};
 
 const order = orders[0];
 
-const restaurantLocation = {
-  latitude: order.Restaurant.lat,
-  longitude: order.Restaurant.lng,
-};
-
 const OrderDelivery = ({ route, navigation }) => {
+  const [expoPushToken, setExpoPushToken] = useState("");
+  const [notification, setNotification] = useState(false);
+  const notificationListener = useRef();
+  const responseListener = useRef();
+
+  useEffect(() => {
+    registerForPushNotificationsAsync().then((token) =>
+      setExpoPushToken(token)
+    );
+
+    // This listener is fired whenever a notification is received while the app is foregrounded
+    notificationListener.current =
+      Notifications.addNotificationReceivedListener((notification) => {
+        setNotification(notification);
+      });
+
+    // This listener is fired whenever a user taps on or interacts with a notification (works when app is foregrounded, backgrounded, or killed)
+    responseListener.current =
+      Notifications.addNotificationResponseReceivedListener((response) => {
+        console.log(response);
+      });
+
+    return () => {
+      Notifications.removeNotificationSubscription(
+        notificationListener.current
+      );
+      Notifications.removeNotificationSubscription(responseListener.current);
+    };
+  }, []);
   const { id } = route.params;
-  const { latitude } = route.params;
-  const { longitude } = route.params;
+  const { customerLatitude } = route.params;
+  const { customerLongitude } = route.params;
   const { address } = route.params;
   const { building } = route.params;
   //const { status } = route.params;
   const { Odishes } = route.params;
   const [status, setStatus] = useState("Ready");
-  console.log(latitude, longitude);
-  // const deliveryLocation = {
-  //   latitude,
-  //   longitude,
-  // };
   const deliveryLocation = {
-    latitude: -1.2529133,
-    longitude: 36.715615,
+    // latitude: customerLatitude,
+    //longitude: customerLongitude,
+    latitude: -1.2519106,
+    longitude: 36.6946812,
+  };
+  const restaurantLocation = {
+    // latitude: -1.26471,
+    //longitude: 36.8015,
+    latitude: -1.2519106,
+    longitude: 36.6946812,
   };
 
   const getCurrentOrderById = () => {
@@ -64,9 +107,13 @@ const OrderDelivery = ({ route, navigation }) => {
         console.log(error);
       });
   };
-  // useEffect(() => {
-  //   getCurrentOrderById();
-  // });
+  useEffect(() => {
+    let isCancelled = false;
+    getCurrentOrderById();
+    return () => {
+      isCancelled = true;
+    };
+  });
 
   const Accepted = () => {
     axios
@@ -77,7 +124,7 @@ const OrderDelivery = ({ route, navigation }) => {
       })
       .then(function (response) {
         console.log(response);
-        setDeliveryStatus(ORDER_STATUSES.ACCEPTED);
+        //  setDeliveryStatus(ORDER_STATUSES.ACCEPTED);
       })
       .catch(function (error) {
         console.log(error);
@@ -93,7 +140,7 @@ const OrderDelivery = ({ route, navigation }) => {
       })
       .then(function (response) {
         console.log(response);
-        setDeliveryStatus(ORDER_STATUSES.ACCEPTED);
+        //setDeliveryStatus(ORDER_STATUSES.ACCEPTED);
       })
       .catch(function (error) {
         console.log(error);
@@ -109,7 +156,22 @@ const OrderDelivery = ({ route, navigation }) => {
       })
       .then(function (response) {
         console.log(response);
-        setDeliveryStatus(ORDER_STATUSES.ACCEPTED);
+        //  setDeliveryStatus(ORDER_STATUSES.ACCEPTED);
+      })
+      .catch(function (error) {
+        console.log(error);
+      });
+  };
+  const completeOrder = () => {
+    axios
+      .put(`https://myfoodcms189.herokuapp.com/api/restaurant-orders/${id}`, {
+        data: {
+          status: "Delivered",
+        },
+      })
+      .then(function (response) {
+        console.log(response);
+        // setDeliveryStatus(ORDER_STATUSES.ACCEPTED);
       })
       .catch(function (error) {
         console.log(error);
@@ -129,6 +191,7 @@ const OrderDelivery = ({ route, navigation }) => {
     ORDER_STATUSES.READY_FOR_PICKUP
   );
   const [isDriverClose, setIsDriverClose] = useState(false);
+  console.log(driverLocation);
 
   const bottomSheetRef = useRef(null);
   const mapRef = useRef(null);
@@ -186,7 +249,8 @@ const OrderDelivery = ({ route, navigation }) => {
     return <ActivityIndicator size={"large"} />;
   }
   //console.log(driverLocation);
-  const onButtonpressed = () => {
+  const onButtonpressed = async () => {
+    console.log("Pressed");
     if (status === "Ready") {
       bottomSheetRef.current?.collapse();
       mapRef.current.animateToRegion({
@@ -195,43 +259,57 @@ const OrderDelivery = ({ route, navigation }) => {
         latitudeDelta: 0.01,
         longitudeDelta: 0.01,
       });
-      // Accepted();
+      Accepted();
       setStatus("Accepted");
-    }
-    if (deliveryStatus === "Accepted") {
+      await sendPushNotification(expoPushToken);
+    } else if (status === "Accepted") {
       bottomSheetRef.current?.collapse();
-      setDeliveryStatus(ORDER_STATUSES.PICKED_UP);
+      setStatus("PickedUp");
+      PickedUp();
     }
     if (status === "PickedUp") {
       bottomSheetRef.current?.collapse();
+      //PickedUp();
       navigation.goBack();
       console.warn("Delivery Finished");
+    }
+    if (status === "PickedUp") {
+      completeOrder();
+      bottomSheetRef.current?.collapse();
+      navigation.goBack();
     }
   };
   console.log(status);
 
   const renderButtonTitle = () => {
     if (status === "Ready") {
-      return "Accept Order";
+      return false;
     }
-    if (status === "Accepted") {
-      return "Pick-Up Order";
+    if ((status === "Accepted" || status === "PickedUp") && isDriverClose) {
+      return false;
     }
     if (status === "PickedUp") {
       return "Complete Delivery";
     }
+    return true;
   };
 
   const isButtonDisabled = () => {
     if (status === "Ready") {
       return false;
     }
-    if ((status === "ACCEPTED" || status === "PickedUp") && isDriverClose) {
+    if (status === "Accepted" && isDriverClose) {
+      return false;
+    }
+    if (status === "PickedUp" && isDriverClose) {
       return false;
     }
 
     return true;
   };
+  if (!driverLocation) {
+    return <ActivityIndicator size={"large"} />;
+  }
 
   return (
     <View style={styles.container}>
@@ -247,10 +325,10 @@ const OrderDelivery = ({ route, navigation }) => {
           longitudeDelta: 0.07,
         }}
       >
-        {/* <MapViewDirections
+        <MapViewDirections
           origin={driverLocation}
           destination={
-            status === "Ready" ? restaurantLocation : deliveryLocation
+            status === "Accepted" ? restaurantLocation : deliveryLocation
           }
           strokeWidth={10}
           waypoints={status === "Ready" ? [restaurantLocation] : []}
@@ -261,11 +339,11 @@ const OrderDelivery = ({ route, navigation }) => {
             setTotalMinutes(result.duration);
             setTotalKm(result.distance);
           }}
-        /> */}
+        />
         <Marker
           coordinate={{
-            latitude: order.Restaurant.lat,
-            longitude: order.Restaurant.lng,
+            latitude: restaurantLocation.latitude,
+            longitude: restaurantLocation.longitude,
           }}
           title={order.Restaurant.name}
           description={order.Restaurant.address}
@@ -281,7 +359,7 @@ const OrderDelivery = ({ route, navigation }) => {
             latitude: Number(deliveryLocation.latitude),
             longitude: Number(deliveryLocation.longitude),
           }}
-          title={order.User.name}
+          title="customer"
           description={order.User.address}
         >
           <View
@@ -360,7 +438,7 @@ const OrderDelivery = ({ route, navigation }) => {
           onPress={onButtonpressed}
           disabled={isButtonDisabled()}
         >
-          <Text style={styles.buttonText}>{renderButtonTitle()}</Text>
+          <Text style={styles.buttonText}>{STATUS_TO_TITLE[status]}</Text>
         </Pressable>
       </BottomSheet>
     </View>
@@ -368,3 +446,54 @@ const OrderDelivery = ({ route, navigation }) => {
 };
 
 export default OrderDelivery;
+
+async function sendPushNotification(expoPushToken) {
+  const message = {
+    to: expoPushToken,
+    sound: "default",
+    title: "Original Title",
+    body: "And here is the body!",
+    data: { someData: "goes here" },
+  };
+
+  await fetch("https://exp.host/--/api/v2/push/send", {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+      "Accept-encoding": "gzip, deflate",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(message),
+  });
+}
+async function registerForPushNotificationsAsync() {
+  let token;
+  if (Device.isDevice) {
+    const { status: existingStatus } =
+      await Notifications.getPermissionsAsync();
+    let finalStatus = existingStatus;
+    if (existingStatus !== "granted") {
+      const { status } = await Notifications.requestPermissionsAsync();
+      finalStatus = status;
+    }
+    if (finalStatus !== "granted") {
+      alert("Failed to get push token for push notification!");
+      return;
+    }
+    token = (await Notifications.getExpoPushTokenAsync()).data;
+    console.log(token);
+  } else {
+    alert("Must use physical device for Push Notifications");
+  }
+
+  if (Platform.OS === "android") {
+    Notifications.setNotificationChannelAsync("default", {
+      name: "default",
+      importance: Notifications.AndroidImportance.MAX,
+      vibrationPattern: [0, 250, 250, 250],
+      lightColor: "#FF231F7C",
+    });
+  }
+
+  return token;
+}
