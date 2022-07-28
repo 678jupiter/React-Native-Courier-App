@@ -10,6 +10,8 @@ import { PersistGate } from "redux-persist/es/integration/react";
 import { useEffect, useState } from "react";
 import { useFonts } from "expo-font";
 import Track from "./Rough/Track";
+import SocketNav from "./Socket/Nav/navi";
+import FakeApp from "./fakeApp";
 
 const client = new ApolloClient({
   uri: "https://myfoodcms189.herokuapp.com/graphql",
@@ -43,7 +45,7 @@ export default function App() {
         <ApolloProvider client={client}>
           <NavigationContainer>
             <GestureHandlerRootView style={{ flex: 1 }}>
-              <Navigation />
+              <FakeApp />
             </GestureHandlerRootView>
             <StatusBar style="auto" />
           </NavigationContainer>

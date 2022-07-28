@@ -4,6 +4,7 @@ import OrdersDeliveryScreen from "../screens/OrderDelivery";
 import { useDispatch, useSelector } from "react-redux";
 import Login from "../screens/Auth/Login";
 import Register from "../screens/Auth/Register";
+import NavigatetoApp from "../screens/NavigatetoApp";
 
 const Stack = createNativeStackNavigator();
 
@@ -21,6 +22,10 @@ const Navigation = () => {
           <Stack.Screen
             name="OrdersDeliveryScreen"
             component={OrdersDeliveryScreen}
+          />
+          <Stack.Screen
+            name="OrdersDeliveryScreen2"
+            component={NavigatetoApp}
           />
         </>
       ) : (

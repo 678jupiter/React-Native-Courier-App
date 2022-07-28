@@ -23,6 +23,8 @@ import MapViewDirections from "react-native-maps-directions";
 import axios from "axios";
 import * as Device from "expo-device";
 import * as Notifications from "expo-notifications";
+import io from "socket.io-client";
+import { useDispatch, useSelector } from "react-redux";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -40,35 +42,24 @@ const STATUS_TO_TITLE = {
 const order = orders[0];
 
 const OrderDelivery = ({ route, navigation }) => {
-  const [expoPushToken, setExpoPushToken] = useState("");
-  const [notification, setNotification] = useState(false);
-  const notificationListener = useRef();
-  const responseListener = useRef();
+  const userData = useSelector((state) => state.user.usermeta);
 
+  const authAxios = axios.create({
+    baseURL: "http://localhost:1337/api/",
+    headers: {
+      Authorization: `Bearer ${userData.jwt}`,
+    },
+  });
+  const socket = io("http://localhost:4000");
+
+  function showRoom() {
+    console.log("Joined Room");
+  }
   useEffect(() => {
-    registerForPushNotificationsAsync().then((token) =>
-      setExpoPushToken(token)
-    );
-
-    // This listener is fired whenever a notification is received while the app is foregrounded
-    notificationListener.current =
-      Notifications.addNotificationReceivedListener((notification) => {
-        setNotification(notification);
-      });
-
-    // This listener is fired whenever a user taps on or interacts with a notification (works when app is foregrounded, backgrounded, or killed)
-    responseListener.current =
-      Notifications.addNotificationResponseReceivedListener((response) => {
-        console.log(response);
-      });
-
-    return () => {
-      Notifications.removeNotificationSubscription(
-        notificationListener.current
-      );
-      Notifications.removeNotificationSubscription(responseListener.current);
-    };
+    const input = id;
+    socket.emit("enter_room", input, showRoom);
   }, []);
+
   const { id } = route.params;
   const { customerLatitude } = route.params;
   const { customerLongitude } = route.params;
@@ -109,15 +100,15 @@ const OrderDelivery = ({ route, navigation }) => {
   };
   useEffect(() => {
     let isCancelled = false;
-    getCurrentOrderById();
+    // getCurrentOrderById();
     return () => {
       isCancelled = true;
     };
   });
 
   const Accepted = () => {
-    axios
-      .put(`https://myfoodcms189.herokuapp.com/api/restaurant-orders/${id}`, {
+    authAxios
+      .put(`restaurant-orders/${id}`, {
         data: {
           status: "Accepted",
         },
@@ -132,8 +123,8 @@ const OrderDelivery = ({ route, navigation }) => {
   };
 
   const PickedUp = () => {
-    axios
-      .put(`https://myfoodcms189.herokuapp.com/api/restaurant-orders/${id}`, {
+    authAxios
+      .put(`restaurant-orders/${id}`, {
         data: {
           status: "PickedUp",
         },
@@ -148,8 +139,8 @@ const OrderDelivery = ({ route, navigation }) => {
   };
 
   const Delivering = () => {
-    axios
-      .put(`https://myfoodcms189.herokuapp.com/api/restaurant-orders/${id}`, {
+    authAxios
+      .put(`restaurant-orders/${id}`, {
         data: {
           status: "Delivering",
         },
@@ -163,8 +154,8 @@ const OrderDelivery = ({ route, navigation }) => {
       });
   };
   const completeOrder = () => {
-    axios
-      .put(`https://myfoodcms189.herokuapp.com/api/restaurant-orders/${id}`, {
+    authAxios
+      .put(`restaurant-orders/${id}`, {
         data: {
           status: "Delivered",
         },
@@ -217,29 +208,37 @@ const OrderDelivery = ({ route, navigation }) => {
     const foregroundSubscription = Location.watchPositionAsync(
       {
         accuracy: Location.Accuracy.High,
-        distanceInterval: 100,
+        distanceInterval: 10,
       },
       (updatedLocation) => {
         setDriverLocation({
           latitude: updatedLocation.coords.latitude,
           longitude: updatedLocation.coords.longitude,
         });
-        axios
-          .put(
-            `https://myfoodcms189.herokuapp.com/api/restaurant-orders/${id}`,
-            {
-              data: {
-                courierLat: JSON.stringify(updatedLocation.coords.latitude),
-                courierLng: JSON.stringify(updatedLocation.coords.longitude),
-              },
-            }
-          )
-          .then(function (response) {
-            console.log("Updated");
-          })
-          .catch(function (error) {
-            console.log(error);
-          });
+        // axios
+        //   .put(
+        //     `https://myfoodcms189.herokuapp.com/api/restaurant-orders/${id}`,
+        //     {
+        //       data: {
+        //         courierLat: JSON.stringify(updatedLocation.coords.latitude),
+        //         courierLng: JSON.stringify(updatedLocation.coords.longitude),
+        //       },
+        //     }
+        //   )
+        //   .then(function (response) {
+        //     console.log("Updated");
+        //   })
+        //   .catch(function (error) {
+        //     console.log(error);
+        //   });
+        let roomName = id;
+        const inputM = {
+          courierLat: JSON.stringify(updatedLocation.coords.latitude),
+          courierLng: JSON.stringify(updatedLocation.coords.longitude),
+        };
+        socket.emit("new_message", inputM, roomName, () => {
+          console.log("emit");
+        });
       }
     );
     return foregroundSubscription;
@@ -261,7 +260,7 @@ const OrderDelivery = ({ route, navigation }) => {
       });
       Accepted();
       setStatus("Accepted");
-      await sendPushNotification(expoPushToken);
+      //await sendPushNotification(expoPushToken);
     } else if (status === "Accepted") {
       bottomSheetRef.current?.collapse();
       setStatus("PickedUp");
@@ -325,7 +324,7 @@ const OrderDelivery = ({ route, navigation }) => {
           longitudeDelta: 0.07,
         }}
       >
-        <MapViewDirections
+        {/* <MapViewDirections
           origin={driverLocation}
           destination={
             status === "Accepted" ? restaurantLocation : deliveryLocation
@@ -339,7 +338,7 @@ const OrderDelivery = ({ route, navigation }) => {
             setTotalMinutes(result.duration);
             setTotalKm(result.distance);
           }}
-        />
+        /> */}
         <Marker
           coordinate={{
             latitude: restaurantLocation.latitude,
@@ -446,54 +445,3 @@ const OrderDelivery = ({ route, navigation }) => {
 };
 
 export default OrderDelivery;
-
-async function sendPushNotification(expoPushToken) {
-  const message = {
-    to: expoPushToken,
-    sound: "default",
-    title: "Original Title",
-    body: "And here is the body!",
-    data: { someData: "goes here" },
-  };
-
-  await fetch("https://exp.host/--/api/v2/push/send", {
-    method: "POST",
-    headers: {
-      Accept: "application/json",
-      "Accept-encoding": "gzip, deflate",
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(message),
-  });
-}
-async function registerForPushNotificationsAsync() {
-  let token;
-  if (Device.isDevice) {
-    const { status: existingStatus } =
-      await Notifications.getPermissionsAsync();
-    let finalStatus = existingStatus;
-    if (existingStatus !== "granted") {
-      const { status } = await Notifications.requestPermissionsAsync();
-      finalStatus = status;
-    }
-    if (finalStatus !== "granted") {
-      alert("Failed to get push token for push notification!");
-      return;
-    }
-    token = (await Notifications.getExpoPushTokenAsync()).data;
-    console.log(token);
-  } else {
-    alert("Must use physical device for Push Notifications");
-  }
-
-  if (Platform.OS === "android") {
-    Notifications.setNotificationChannelAsync("default", {
-      name: "default",
-      importance: Notifications.AndroidImportance.MAX,
-      vibrationPattern: [0, 250, 250, 250],
-      lightColor: "#FF231F7C",
-    });
-  }
-
-  return token;
-}

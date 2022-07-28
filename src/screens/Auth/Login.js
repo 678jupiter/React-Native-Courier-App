@@ -17,6 +17,7 @@ import { login } from "../../../lib/auth";
 import { useDispatch, useSelector } from "react-redux";
 import { userActions } from "../../../Redux/userSlice";
 import { authActions } from "../../../Redux/AuthSlice";
+import { tokenActions } from "../../../Redux/tokenSlice";
 
 const LogIn = ({ navigation }) => {
   const [identifier, setEmail] = useState("");
@@ -26,21 +27,27 @@ const LogIn = ({ navigation }) => {
 
   const handlePasswordVisibility = () => {};
   const handleSubmit = async () => {
+    setIsSubmitting(true);
+
     try {
       await login(identifier, password)
         .then((res) => {
           setIsSubmitting(true);
           dispatch(
             userActions.addUser({
-              jwt: res.data.jwt,
               id: res.data.user.id,
               username: res.data.user.username,
               email: res.data.user.email,
               mobileNumber: res.data.user.mobileNumber,
               secondName: res.data.user.secondName,
-            }),
-            dispatch(authActions.login())
+            })
           );
+          dispatch(
+            tokenActions.addToken({
+              jwt: res.data.jwt,
+            })
+          );
+          dispatch(authActions.login());
           setIsSubmitting(false);
         })
         .catch((error) => {
@@ -73,7 +80,11 @@ const LogIn = ({ navigation }) => {
             desc="For fast delivering, login first. 🤝"
           />
           <View style={styles.container}>
-            <TextInput label="Email" onChangeText={(text) => setEmail(text)} />
+            <TextInput
+              KeyboardType="email-address"
+              label="Email"
+              onChangeText={(text) => setEmail(text)}
+            />
             <Space height={30} />
             <View>
               <Text style={styles.label}>Password</Text>

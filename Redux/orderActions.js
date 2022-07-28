@@ -12,6 +12,7 @@ export const fetchOrders = () => {
     try {
       const riderData = await fetchHandler();
       dispatch(orderActions.getOrders(riderData));
+      // console.log("Redux fetch Orders");
     } catch (error) {
       console.log(error);
     }

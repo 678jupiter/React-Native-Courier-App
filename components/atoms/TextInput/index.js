@@ -6,7 +6,7 @@ import {
   TextInput as TextInputReact,
 } from "react-native";
 
-const TextInput = ({ label, placeholder, ...props }) => {
+const TextInput = ({ label, placeholder, KeyboardType, ...props }) => {
   return (
     <View>
       <Text style={styles.label}>{label}</Text>
@@ -14,6 +14,7 @@ const TextInput = ({ label, placeholder, ...props }) => {
         style={styles.input}
         autoCapitalize="none"
         placeholder={placeholder}
+        keyboardType={KeyboardType}
         {...props}
       />
     </View>
