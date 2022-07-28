@@ -21,19 +21,18 @@ import { activeOrderActions } from "../../../Redux/ActiveOrderSlice";
 
 const OrdersScreen = ({ navigation }) => {
   const dispatch = useDispatch();
-  useEffect(() => {
-    let isCancelled = false;
-    dispatch(fetchOrders());
-    return () => {
-      isCancelled = true;
-    };
-  }, [dispatch]);
+  useFocusEffect(
+    React.useCallback(() => {
+      let isActive = true;
 
-  // useFocusEffect(
-  //   React.useCallback(() => {
-  //     dispatch(fetchOrders());
-  //   }, [])
-  // );
+      dispatch(fetchOrders());
+
+      return () => {
+        isActive = false;
+      };
+    }, [dispatch])
+  );
+
   const riderOrders = useSelector((state) => state.orders.riderOrders);
   const isActivated = useSelector((state) => state.active.isActive);
   const bottomSheetRef = useRef(null);
@@ -117,18 +116,10 @@ const OrdersScreen = ({ navigation }) => {
     return (
       <View style={{ backgroundColor: "lightblue", flex: 1 }}>
         {/* {ACTIVE_ORDERS} */}
-        <View style={{ marginTop: 30 }}>
-          <Button
-            title="Change Active Status"
-            onPress={() => changeActiveStatus()}
-          />
-        </View>
-
         {isActivated ? (
           <BottomSheet index={1} ref={bottomSheetRef} snapPoints={snapPoints}>
             <View style={{ alignItems: "center", marginBottom: 30 }}>
-              {isActivated ? <Text>Active</Text> : <Text>Not Active</Text>}
-              {/* <Text
+              <Text
                 style={{
                   fontSize: 20,
                   fontWeight: "600",
@@ -137,9 +128,9 @@ const OrdersScreen = ({ navigation }) => {
                 }}
               >
                 You're Online
-              </Text> */}
+              </Text>
               <Text style={{ letterSpacing: 0.5, color: "grey" }}>
-                Available Orders: {result.length}
+                Available Orders: {Acc_Orders.length}
               </Text>
             </View>
             {Acc_Orders ? (
@@ -227,9 +218,7 @@ const OrdersScreen = ({ navigation }) => {
         ) : (
           <BottomSheet index={1} ref={bottomSheetRef} snapPoints={snapPoints}>
             <View style={{ alignItems: "center", marginBottom: 30 }}>
-              {isActivated ? <Text>Active</Text> : <Text>Not Active</Text>}
-
-              {/* <Text
+              <Text
                 style={{
                   fontSize: 20,
                   fontWeight: "600",
@@ -238,7 +227,7 @@ const OrdersScreen = ({ navigation }) => {
                 }}
               >
                 You're Online
-              </Text> */}
+              </Text>
               <Text style={{ letterSpacing: 0.5, color: "grey" }}>
                 Available Orders: {result.length}
               </Text>

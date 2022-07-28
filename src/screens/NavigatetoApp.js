@@ -12,8 +12,10 @@ import { useDispatch, useSelector } from "react-redux";
 import axios from "axios";
 import { fetchOrders } from "../../Redux/orderActions";
 import io from "socket.io-client";
+import * as TaskManager from "expo-task-manager";
 import * as Location from "expo-location";
 import { getPreciseDistance } from "geolib";
+import { activeOrderActions } from "../../Redux/ActiveOrderSlice";
 
 const NavigatetoApp = ({ route, navigation }) => {
   const { id } = route.params;
@@ -66,6 +68,7 @@ const NavigatetoApp = ({ route, navigation }) => {
       .then(function (response) {
         setInite(1);
         console.log("res");
+        requestPermissions();
       })
       .catch(function (error) {
         console.log(error);
@@ -82,63 +85,15 @@ const NavigatetoApp = ({ route, navigation }) => {
       .then(function (response) {
         setInite(1);
         console.log("res");
+        console.log("close");
+        TaskManager.unregisterAllTasksAsync();
+        dispatch(activeOrderActions.notActive());
       })
       .catch(function (error) {
         console.log(error);
       });
   };
   const [driverLocation, setDriverLocation] = useState(null);
-
-  useEffect(() => {
-    (async () => {
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      if (!status === "granted") {
-        console.log("Nonono");
-        return;
-      }
-
-      let location = await Location.getCurrentPositionAsync();
-      setDriverLocation({
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
-      });
-    })();
-
-    const foregroundSubscription = Location.watchPositionAsync(
-      {
-        accuracy: Location.Accuracy.High,
-        distanceInterval: 10,
-      },
-      (updatedLocation) => {
-        setDriverLocation({
-          latitude: updatedLocation.coords.latitude,
-          longitude: updatedLocation.coords.longitude,
-        });
-        authAxios
-          .put(`restaurant-orders/${id}`, {
-            data: {
-              courierLat: JSON.stringify(updatedLocation.coords.latitude),
-              courierLng: JSON.stringify(updatedLocation.coords.longitude),
-            },
-          })
-          .then(function (response) {
-            console.log("Updated");
-          })
-          .catch(function (error) {
-            console.log(error);
-          });
-        let roomName = id;
-        const inputM = {
-          courierLat: JSON.stringify(updatedLocation.coords.latitude),
-          courierLng: JSON.stringify(updatedLocation.coords.longitude),
-        };
-        socket.emit("new_message", inputM, roomName, () => {
-          console.log("emit");
-        });
-      }
-    );
-    return foregroundSubscription;
-  }, []);
 
   const [distance, setDistance] = useState();
   const [isDriverClose, setIsDriverClose] = useState(false);
@@ -200,19 +155,17 @@ const NavigatetoApp = ({ route, navigation }) => {
   }, []);
 
   const LOCATION_TASK_NAME = "background-location-task";
-
   const requestPermissions = async () => {
     const { status } = await Location.requestBackgroundPermissionsAsync();
     console.log(status);
     if (status === "granted") {
-      setAppReady(true);
-
       // Location.requestBackgroundPermissionsAsync();
       await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-        accuracy: Location.Accuracy.Balanced,
+        accuracy: Location.Accuracy.High,
         distanceInterval: 0,
         deferredUpdatesInterval: 0,
         deferredUpdatesDistance: 0,
+        pausesUpdatesAutomatically: false,
       });
     }
   };
@@ -223,8 +176,36 @@ const NavigatetoApp = ({ route, navigation }) => {
     }
     if (data) {
       const { locations } = data;
-      console.log(data);
-      // do something with the locations captured in the background
+      const [
+        {
+          coords: { latitude, longitude },
+        },
+      ] = locations;
+      setDriverLocation({
+        latitude: latitude,
+        longitude: longitude,
+      });
+      authAxios
+        .put(`restaurant-orders/${id}`, {
+          data: {
+            courierLat: JSON.stringify(latitude),
+            courierLng: JSON.stringify(longitude),
+          },
+        })
+        .then(function () {
+          console.log("Updated");
+        })
+        .catch(function (error) {
+          console.log(error);
+        });
+      let roomName = id;
+      const inputM = {
+        courierLat: JSON.stringify(latitude),
+        courierLng: JSON.stringify(longitude),
+      };
+      socket.emit("new_message", inputM, roomName, () => {
+        console.log("emit");
+      });
     }
   });
 
@@ -281,8 +262,9 @@ const NavigatetoApp = ({ route, navigation }) => {
           <Text>distance{distance}</Text>
 
           <Text>Complete Your Order</Text>
+          <Text>You are Currently Delivering the order</Text>
         </View>
-        <Button title="Delivering" />
+        <Button title="Arrived" onPress={() => Arrived()} />
       </SafeAreaView>
     );
   }
@@ -316,6 +298,12 @@ const NavigatetoApp = ({ route, navigation }) => {
         </View>
         <Button title="Find More Orders" />
       </SafeAreaView>
+    );
+  } else {
+    return (
+      <View style={{ justifyContent: "center", alignItems: "center", flex: 1 }}>
+        <Text>No Taks.</Text>
+      </View>
     );
   }
 };
