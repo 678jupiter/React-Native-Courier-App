@@ -1,23 +1,32 @@
 import React, { useState } from "react";
-import { SafeAreaView, StyleSheet, Button, Text } from "react-native";
+import {
+  SafeAreaView,
+  StyleSheet,
+  Button,
+  Text,
+  ActivityIndicator,
+} from "react-native";
 import OTPInputView from "@twotalltotems/react-native-otp-input";
 import { showMessage } from "react-native-flash-message";
-import { appErrors, registerUser } from "../../../lib/auth";
 import { useDispatch, useSelector } from "react-redux";
 import { authActions } from "../../../Redux/AuthSlice";
 import { primaryColor, secondaryColor } from "../../../config";
 import { checkVerification } from "../../../lib/verify";
 import { userActions } from "../../../Redux/userSlice";
 import { tokenActions } from "../../../Redux/tokenSlice";
+import axios from "axios";
+import mime from "mime";
 
 const Otp = ({ route, navigation }) => {
   const [message, setMessage] = useState();
+  const [info, setinfo] = useState();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [messageType, setMessageType] = useState();
   const [error, setError] = useState({});
   const dispatch = useDispatch();
 
-  const { phoneNumber } = route.params;
+  // const { phoneNumber } = route.params;
+  const phoneNumber = "0799568838";
   const [invalidCode, setInvalidCode] = useState(false);
   const fakeUser = useSelector((state) => state.fuser.userfmeta);
   const handleMessage = (message, type = "FAILED") => {
@@ -27,100 +36,33 @@ const Otp = ({ route, navigation }) => {
   const token = useSelector((state) => state.token.userToken);
   const userData = useSelector((state) => state.user.usermeta);
 
-  const authAxios = axios.create({
-    baseURL: `https://myfoodcms189.herokuapp.com/api/`,
-    headers: {
-      Authorization: `Bearer ${token.jwt}`,
-    },
-  });
-  const authAxios2 = axios.create({
-    baseURL: `https://myfoodcms189.herokuapp.com/api/`,
-    headers: {
-      Authorization: `Bearer ${token.jwt}`,
-      "Content-Type": "multipart/form-data",
-    },
-  });
-
-  const imageUpload = () => {
-    let uuri = fakeUser.imageLocalUri;
-    const newImageUri = "file:///" + uuri.split("file:/").join("");
-
-    const formData = new FormData();
-
-    formData.append("files", {
-      uri: newImageUri,
-      type: mime.getType(newImageUri),
-      name: newImageUri.split("/").pop(),
-    });
-
-    authAxios2
-      .post("upload", formData)
-      .then((res) => {
-        const [
-          {
-            formats: {
-              medium: { url },
-            },
-          },
-        ] = res.data;
-        var imageId = url;
-        authAxios
-          .put(`users/${userData.id}`, {
-            profilePicture: imageId,
-          })
-          .then((response) => {
-            dispatch(
-              userActions.addUser({
-                id: response.data.id,
-                username: response.data.username,
-                email: response.data.email,
-                mobileNumber: response.data.mobileNumber,
-                image: response.data.profilePicture,
-              })
-            );
-          })
-          .catch((error) => {
-            console.log("1" + error);
-            ErrorHandle123();
-            function ErrorHandle123(error) {
-              var about =
-                "Account.js second axios !" +
-                "/" +
-                "captureImage" +
-                "/" +
-                error;
-              appErrors(about);
-            }
-          });
-      })
-      .catch((error) => {
-        console.log("2" + error);
-        ErrorHandle124();
-        function ErrorHandle124(error) {
-          var about =
-            "Account.js first axios !" + "/" + "captureImage" + "/" + error;
-          appErrors(about);
-        }
-      });
-  };
-  const handleSubmit = async () => {
+  const globallFunction = () => {
     setIsSubmitting(true);
+    setinfo("Registering your Acount...");
     let username = fakeUser.firstName;
     let email = fakeUser.email;
     let password = fakeUser.password;
     let mobileNumber = phoneNumber;
-    handleMessage("");
-    setIsSubmitting(true);
-    try {
-      setIsSubmitting(true);
-      registerUser(username, email, password, mobileNumber).then((res) => {
+    var func_User_Id = "";
+    var func_UserName = "";
+    var func_UserImage = "";
+    var func_Jwt = "";
+
+    var func_SecondName = "";
+    axios
+      .post(`https://myfoodcms189.herokuapp.com/api/auth/local/register`, {
+        username,
+        email,
+        password,
+        mobileNumber,
+      })
+      .then((res) => {
         dispatch(
           userActions.addUser({
             id: res.data.user.id,
             username: res.data.user.username,
             email: res.data.user.email,
             mobileNumber: res.data.user.mobileNumber,
-            secondName: res.data.user.secondName,
             image: "",
           })
         );
@@ -129,49 +71,106 @@ const Otp = ({ route, navigation }) => {
             jwt: res.data.jwt,
           })
         );
-        //  dispatch(authActions.login());
-        //  handleMessage(message);
-        //    setMessage("");
-        // showMessage({
-        //   message: "You have registered successfully.",
-        //   type: "success",
-        //   backgroundColor: secondaryColor,
-        //   color: "#fff",
-        //   icon: "success",
-        //   statusBarHeight: "34",
-        // });
+        (func_Jwt = res.data.jwt), (func_User_Id = res.data.user.id);
+        func_UserName = res.data.user.username;
+        setinfo("Uploading Profile Picture...");
+        const newImageUri =
+          "file:///" + fakeUser.imageLocalUri.split("file:/").join("");
 
-        //  navigation.replace("gated");
-        // setIsSubmitting(false);
-        imageUpload();
+        const formData = new FormData();
+
+        formData.append("files", {
+          uri: newImageUri,
+          type: mime.getType(newImageUri),
+          name: newImageUri.split("/").pop(),
+        });
+        const authAxios2 = axios.create({
+          baseURL: `https://myfoodcms189.herokuapp.com/api/`,
+          headers: {
+            Authorization: `Bearer ${func_Jwt}`,
+            "Content-Type": "multipart/form-data",
+          },
+        });
+        authAxios2
+          .post("upload", formData)
+          .then((res) => {
+            const [
+              {
+                formats: {
+                  medium: { url },
+                },
+              },
+            ] = res.data;
+            var imageId = url;
+            func_UserImage = url;
+
+            const authAxios = axios.create({
+              baseURL: `https://myfoodcms189.herokuapp.com/api/`,
+              headers: {
+                Authorization: `Bearer ${func_Jwt}`,
+              },
+            });
+            authAxios
+              .put(`users/${func_User_Id}`, {
+                profilePicture: imageId,
+              })
+              .then((response) => {
+                authAxios
+                  .post(`couriers`, {
+                    data: {
+                      firstName: func_UserName,
+                      secondName: fakeUser.secondName,
+                      users_permissions_user: func_User_Id,
+                      mobileNumber: phoneNumber,
+                      active: true,
+                      image: func_UserImage,
+                    },
+                  })
+                  .then((res) => {
+                    setIsSubmitting(false);
+                    setinfo("");
+                    dispatch(
+                      userActions.addUser({
+                        id: response.data.id,
+                        username: response.data.username,
+                        email: response.data.email,
+                        mobileNumber: response.data.mobileNumber,
+                        image: response.data.profilePicture,
+                      })
+                    );
+                    dispatch(authActions.login());
+                    handleMessage(message);
+                    setMessage("");
+                    showMessage({
+                      message: "You have registered successfully.",
+                      type: "success",
+                      backgroundColor: secondaryColor,
+                      color: "#fff",
+                      icon: "success",
+                      statusBarHeight: "34",
+                    });
+                  })
+                  .catch((error) => {
+                    alert(`Merging User as Couri ${error}`);
+                  });
+              })
+              .catch((error) => {
+                alert(`Placing Profile Image ${error}`);
+              });
+          })
+          .catch((error) => {
+            alert(`Image Upload ${error}`);
+          });
+      })
+      .catch((error) => {
+        alert(`registration ${error}`);
       });
-    } catch (error) {
-      setIsSubmitting(false);
-      setMessage(() => (
-        <Text style={styles.msgBox}>Incorrect Email or Password </Text>
-      ));
-      errorHandle7();
-      function errorHandle7() {
-        var about =
-          "Method handleSubmit Register!" +
-          "/" +
-          "Function handleSubmit second catch error" +
-          "/" +
-          error;
-        appErrors(about);
-      }
-    }
-    //  setIsSubmitting(false);
   };
-  const navigateToImage = () => {
-    navigation.navigate("profile Picture");
-  };
+
   return (
     <SafeAreaView style={styles.wrapper}>
       <Text style={styles.prompt}>Enter the code we sent you</Text>
-      <Text style={styles.message}>
-        {`Your phone (${phoneNumber}) will be used to protect your account each time you log in.`}
-      </Text>
+      <Text style={styles.message}>{`Your phone is (${phoneNumber}).`}</Text>
       <Button
         title="Edit Phone Number"
         onPress={() => navigation.replace("phoneNumberV")}
@@ -185,15 +184,24 @@ const Otp = ({ route, navigation }) => {
         onCodeFilled={(code) => {
           checkVerification(phoneNumber, code).then((success) => {
             console.log(success);
-            if (!success) setInvalidCode(true);
-            success &&
-              //&& handleSubmit();
-
-              navigateToImage();
+            if (!success) {
+              setInvalidCode(true);
+            }
+            if (success) {
+              globallFunction();
+            }
           });
         }}
       />
       {invalidCode && <Text style={styles.error}>Incorrect code.</Text>}
+      {isSubmitting ? (
+        <>
+          <ActivityIndicator color="black" size="large" />
+          <Text>Wait...</Text>
+          <Text>{info}</Text>
+        </>
+      ) : null}
+      <Button title="GLOBAL" onPress={() => globallFunction()} />
     </SafeAreaView>
   );
 };

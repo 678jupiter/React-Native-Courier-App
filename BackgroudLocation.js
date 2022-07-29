@@ -5,7 +5,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Alert, Animated, StyleSheet, View, BackHandler } from "react-native";
 import * as Location from "expo-location";
 import MsemaKweli from "./src/navigation/MasterAuth";
-import ProfileImage from "./src/screens/Auth/ProfileImage";
 
 // Instruct SplashScreen not to hide yet, we want to do this manually
 SplashScreen.preventAutoHideAsync().catch(() => {

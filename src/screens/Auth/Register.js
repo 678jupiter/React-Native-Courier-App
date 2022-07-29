@@ -102,7 +102,7 @@ const Register = () => {
       })
     );
     setIsSubmitting(true);
-    //navigation.navigate("phoneNumberV");
+    navigation.navigate("phoneNumberV");
   };
 
   const [isModalVisible, setModalVisible] = useState(false);
@@ -150,7 +150,7 @@ const Register = () => {
                   alignItems: "center",
                   opacity: 0.8,
                 }}
-                onPress={toggleModal}
+                onPress={() => toggleModal()}
               >
                 <View>
                   <Text
@@ -227,7 +227,7 @@ const Register = () => {
       <ModalBottom
         onBackdropPress={toggleModal}
         isVisible={isModalVisible}
-        onPress={toggleModal}
+        onPress={() => toggleModal()}
         label="Close"
       >
         <TouchableOpacity onPress={captureImage}>

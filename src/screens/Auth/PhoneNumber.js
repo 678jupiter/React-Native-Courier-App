@@ -14,7 +14,6 @@ import { Space } from "../../../components";
 const PhoneNumber = ({ navigation }) => {
   const [value, setValue] = useState("");
   const [formattedValue, setFormattedValue] = useState("");
-  const [valid, setValid] = useState(false);
   const [showMessage, setShowMessage] = useState(false);
   const [loading, setLoading] = useState(false);
   const phoneInput = useRef(null);
@@ -27,42 +26,42 @@ const PhoneNumber = ({ navigation }) => {
         channel: "sms",
       });
 
-      const response = await fetch(
-        `https://verify-8667-2eddxt.twil.io/start-verify`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: data,
-        }
-      );
-
-      const json = await response.json();
-      setLoading(false);
-      return json.success;
+      await fetch(`https://verify-8667-2eddxt.twil.io/start-verify`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: data,
+      })
+        .then((res) => {
+          setLoading(false);
+          if (res.ok === true) {
+            navigation.navigate("otp", { phoneNumber: formattedValue });
+          } else {
+            alert("Phone Number Error");
+          }
+        })
+        .catch((error) => {
+          alert("Phone Number Error");
+        });
     } catch (error) {
       setLoading(false);
-      console.error(error);
+
+      alert("Phone Numer Error");
       return false;
     }
   };
   const validateNumber = () => {
-    let regExPattern =
-      /^(?:254|\+254|0)?(7(?:(?:[129][0-9])|(?:0[0-8])|(4[0-1]))[0-9]{6})$/;
-
-    let regExPattern2 =
-      /^(?:254|\+254|0)?(1(?:(?:[129][0-9])|(?:0[0-8])|(4[0-1]))[0-9]{6})$/;
-    let isNumberValid = regExPattern.test(value);
-    let isNumberValid2 = regExPattern2.test(value);
-    console.log(value.length);
     if (value.length < 9 || value.length > 10) {
       setShowMessage(true);
     } else {
-      sendSmsVerification().then((sent) => {
-        navigation.navigate("otp", { phoneNumber: formattedValue });
-      });
+      //  sendSmsVerification();
+      proceed();
     }
+  };
+
+  const proceed = () => {
+    navigation.navigate("otp", { phoneNumber: formattedValue });
   };
 
   return (
@@ -74,9 +73,10 @@ const PhoneNumber = ({ navigation }) => {
               flex: 0.1,
               justifyContent: "center",
               alignItems: "center",
+              marginTop: 20,
             }}
           >
-            <Text>Verify your phone number</Text>
+            <Text>Verify your phone number.</Text>
           </View>
 
           <View

@@ -88,6 +88,9 @@ const OrdersScreen = ({ navigation }) => {
       dispatch(activeOrderActions.active());
     }
   };
+  const userData = useSelector((state) => state.user.usermeta);
+
+  console.log(userData);
 
   if (riderOrders.length === 0) {
     return (

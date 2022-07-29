@@ -43,14 +43,20 @@ const MsemaKweli = () => {
       >
         {isLoggedIn ? (
           <>
-            <Stack.Screen name="OrdersScreen" component={OrdersScreen} />
             <Stack.Screen
-              name="OrdersDeliveryScreen"
-              component={OrdersDeliveryScreen}
+              name="OrdersScreen"
+              options={{
+                headerShown: false,
+              }}
+              component={OrdersScreen}
             />
+
             <Stack.Screen
               name="OrdersDeliveryScreen2"
               component={NavigatetoApp}
+              options={{
+                headerShown: false,
+              }}
             />
           </>
         ) : (
