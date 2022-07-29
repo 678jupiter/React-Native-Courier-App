@@ -2,7 +2,6 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { StatusBar } from "expo-status-bar";
 import AppLoading from "expo-app-loading";
 import { NavigationContainer } from "@react-navigation/native";
-import Navigation from "./src/navigation";
 import { ApolloClient, InMemoryCache, ApolloProvider } from "@apollo/client";
 import store, { persistor } from "./Redux/store";
 import { Provider, useDispatch, useSelector } from "react-redux";
@@ -43,12 +42,10 @@ export default function App() {
     <Provider store={store}>
       <PersistGate persistor={persistor}>
         <ApolloProvider client={client}>
-          <NavigationContainer>
-            <GestureHandlerRootView style={{ flex: 1 }}>
-              <FakeApp />
-            </GestureHandlerRootView>
-            <StatusBar style="auto" />
-          </NavigationContainer>
+          <GestureHandlerRootView style={{ flex: 1 }}>
+            <FakeApp />
+          </GestureHandlerRootView>
+          <StatusBar style="auto" />
         </ApolloProvider>
       </PersistGate>
     </Provider>

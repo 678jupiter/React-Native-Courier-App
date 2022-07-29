@@ -7,51 +7,123 @@ import {
   Dimensions,
   Text,
   Pressable,
+  ImageBackground,
+  TouchableOpacity,
 } from "react-native";
-import { Button, Header, Space, TextInput } from "../../../components";
-import { primaryColor, secondaryColor } from "../../../config";
+import {
+  Button,
+  IconText,
+  ModalBottom,
+  Space,
+  TextInput,
+} from "../../../components";
+import {
+  colors,
+  isEmail,
+  MsgBox,
+  primaryColor,
+  secondaryColor,
+} from "../../../config";
 import { TextInput as MytextInput } from "react-native";
 import KeyboardScrollUpForms from "../../../utils/KeyboardScrollUpForms";
 import { useState } from "react";
-import { login, registerUser } from "../../../lib/auth";
+import { registerCourier, registerUser } from "../../../lib/auth";
 import { useDispatch, useSelector } from "react-redux";
 import { userActions } from "../../../Redux/userSlice";
 import { authActions } from "../../../Redux/AuthSlice";
+import { tokenActions } from "../../../Redux/tokenSlice";
+import { useNavigation } from "@react-navigation/native";
+import { useTogglePasswordVisibility } from "../../../components/useTogglePasswordVisibility";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { fakeuserActions } from "../../../Redux/holderslice";
+import * as ImagePicker from "expo-image-picker";
+import mime from "mime";
 
-const Register = ({ navigation }) => {
-  const [username, setFirstName] = useState("");
-  const [email, setEmail] = useState("");
-  const [mobileNumber, setPhoneNumber] = useState("");
-  const [password, SetPassword] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+const Register = () => {
   const dispatch = useDispatch();
+  const navigation = useNavigation();
+  const [username, setFirstName] = useState("");
+  const [secondName, setSecondName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, SetPassword] = useState("");
+  const [message, setMessage] = useState();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [messageType, setMessageType] = useState();
+  const { passwordVisibility, rightIcon, handlePasswordVisibility } =
+    useTogglePasswordVisibility();
+  const [imagePlace, setImage] = useState("");
 
-  const handlePasswordVisibility = () => {};
-  const handleSubmit = async () => {
-    try {
-      registerUser(username, email, password, mobileNumber)
-        .then((res) => {
-          dispatch(
-            userActions.addUser({
-              jwt: res.data.jwt,
-              id: res.data.user.id,
-              username: res.data.user.username,
-              email: res.data.user.email,
-              mobileNumber: res.data.user.mobileNumber,
-              secondName: res.data.user.secondName,
-            }),
-            dispatch(authActions.login())
-          );
-        })
-        .catch((error) => {
-          console.log("2" + error);
-        });
-    } catch (error) {
-      console.log("1" + error);
-    }
+  const handleMessage = (message, type = "FAILED") => {
+    setMessage(message);
+    setMessageType(type);
   };
 
-  const space = Dimensions.get("screen").height / 28;
+  const isFormValid = () => {
+    if (
+      email === "" ||
+      password === "" ||
+      username === "" ||
+      secondName === ""
+    ) {
+      setMessage(() => (
+        <Text style={styles.msgBox}>All fields are required!</Text>
+      ));
+      setIsSubmitting(false);
+      return false;
+    }
+    if (imagePlace === "") {
+      setMessage(() => <Text style={styles.msgBox}>Picture is required!</Text>);
+      setIsSubmitting(false);
+      return false;
+    }
+
+    if (!isEmail(email)) {
+      setMessage(() => (
+        <Text style={styles.msgBox}>Please add a valid email address!</Text>
+      ));
+      return false;
+    }
+    return true;
+  };
+
+  const handleSubmit = async () => {
+    if (!isFormValid()) {
+      return;
+    }
+    handleMessage("");
+    setIsSubmitting(true);
+    dispatch(
+      fakeuserActions.addFake({
+        firstName: username,
+        secondName: secondName,
+        email: email,
+        password: password,
+        imageLocalUri: imagePlace,
+      })
+    );
+    setIsSubmitting(true);
+    //navigation.navigate("phoneNumberV");
+  };
+
+  const [isModalVisible, setModalVisible] = useState(false);
+  const toggleModal = () => {
+    setModalVisible(!isModalVisible);
+  };
+
+  const captureImage = async () => {
+    // No permissions request is necessary for launching the image library
+    let result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.All,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+    if (!result.cancelled) {
+      // setImageUri(result.uri);
+      //setImageType(result.type);
+      setImage(result.uri);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.page}>
@@ -63,36 +135,56 @@ const Register = ({ navigation }) => {
           contentInsetAdjustmentBehavior="automatic"
           showsVerticalScrollIndicator={false}
         >
-          {/* <Space height={space_height} /> */}
-          {/* <Header title="Register" showDesc={false} /> */}
-          {/* <Space height={8} /> */}
-          <View style={styles.mainContainer}>
-            {/* <View style={styles.avaForm}>
-            <View style={styles.avaBorder}>
-              <TouchableScale
-                tension={100}
-                onPress={() => console.log("register")}
+          <View style={styles.avaContainer}>
+            <ImageBackground
+              source={{
+                uri: imagePlace,
+              }}
+              style={styles.avatar}
+            >
+              <TouchableOpacity
+                style={{
+                  top: 135,
+                  backgroundColor: "black",
+                  paddingVertical: 13,
+                  alignItems: "center",
+                  opacity: 0.8,
+                }}
+                onPress={toggleModal}
               >
-                <View style={styles.addAvaTextContainer}>
-                  <Text style={styles.addAvaText}>Add Avatar</Text>
+                <View>
+                  <Text
+                    style={{
+                      color: "#fff",
+                      fontFamily: "CircularStdBold",
+                      fontSize: 14,
+                    }}
+                  >
+                    Take Picture
+                  </Text>
                 </View>
-              </TouchableScale>
-            </View>
-          </View> */}
+              </TouchableOpacity>
+            </ImageBackground>
+          </View>
+          <View style={styles.mainContainer}>
             <TextInput
-              label="Username"
+              label="First Name"
               onChangeText={(text) => setFirstName(text)}
             />
-
-            <Space height={30} />
-            <TextInput label="Email" onChangeText={(text) => setEmail(text)} />
-            <Space height={30} />
+            <Space height={10} />
             <TextInput
-              label="PhoneNumber"
-              onChangeText={(text) => setPhoneNumber(text)}
-              keyboardType="number-pad"
+              label="Second Name"
+              onChangeText={(text) => setSecondName(text)}
             />
-            <Space height={30} />
+
+            <Space height={10} />
+            <TextInput
+              label="Email"
+              keyboardType="email-address"
+              onChangeText={(text) => setEmail(text)}
+            />
+            <Space height={10} />
+
             <View>
               <Text style={styles.label}>Password</Text>
 
@@ -101,26 +193,26 @@ const Register = ({ navigation }) => {
                   style={styles.inputField}
                   onChangeText={(text) => SetPassword(text)}
                   value={password}
-                  // secureTextEntry={passwordVisibility}
+                  secureTextEntry={passwordVisibility}
                 />
                 <Pressable onPress={handlePasswordVisibility}>
-                  {/* <MaterialCommunityIcons
+                  <MaterialCommunityIcons
                     name={rightIcon}
                     size={22}
                     color="#232323"
-                  /> */}
+                  />
                 </Pressable>
               </View>
             </View>
-            {/* <Space height={25} />
-            <MsgBox type={messageType}>{message}</MsgBox> */}
-            <Space height={25} />
+            <Space height={10} />
+            <MsgBox type={messageType}>{message}</MsgBox>
+            <Space height={10} />
 
             <Button
               label="Register"
               radius={6}
               txtSize={14}
-              bgColor={secondaryColor}
+              bgColor={colors.blurple}
               padSizeX={20}
               borderWidth={0}
               fontFam="CircularStdBold"
@@ -132,18 +224,26 @@ const Register = ({ navigation }) => {
           </View>
         </ScrollView>
       </KeyboardScrollUpForms>
-      {/* <FlashMessage
-      // ref={showMessage}2342e 
-      hideOnPress={true}
-      duration={4000}
-      style={{ backgroundColor: 'red' }}
-      textStyle={{ fontFamily: 'CircularStdBold' }}
-    /> */}
+      <ModalBottom
+        onBackdropPress={toggleModal}
+        isVisible={isModalVisible}
+        onPress={toggleModal}
+        label="Close"
+      >
+        <TouchableOpacity onPress={captureImage}>
+          <IconText icon="📷" text="Take Photo" />
+        </TouchableOpacity>
+        <Space height={10} />
+        {/* <TouchableOpacity onPress={uploadImage}>
+            <IconText icon="🖼" text="Choose From Gallery" />
+          </TouchableOpacity> */}
+      </ModalBottom>
     </SafeAreaView>
   );
 };
 
 export default Register;
+
 const styles = StyleSheet.compose({
   page: {
     flex: 1,
@@ -215,7 +315,7 @@ const styles = StyleSheet.compose({
     borderWidth: 1,
     borderRadius: 6,
     borderStyle: "solid",
-    borderColor: "#32cd32",
+    borderColor: colors.blurple,
   },
   inputField: {
     width: "90%",
@@ -230,5 +330,18 @@ const styles = StyleSheet.compose({
     borderRadius: 6,
     borderStyle: "solid",
     borderColor: "#32cd32",
+  },
+  avaContainer: {
+    alignItems: "center",
+    paddingTop: 10,
+    //paddingBottom: 10,
+    // backgroundColor: "red",
+  },
+  avatar: {
+    overflow: "hidden",
+    borderRadius: 180,
+    width: 180,
+    height: 180,
+    backgroundColor: "grey",
   },
 });
