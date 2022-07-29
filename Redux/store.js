@@ -9,6 +9,7 @@ import orderSlice from "./OrderSlice";
 import activeOrderSlice from "./ActiveOrderSlice";
 import tokenSlice from "./tokenSlice";
 import holderSlice from "./holderslice";
+import curSlice from "./courSlice";
 
 const persistConfig = {
   key: "ayee",
@@ -17,6 +18,7 @@ const persistConfig = {
 
 const reducers = combineReducers({
   fuser: holderSlice.reducer,
+  cur: curSlice.reducer,
   auth: authSlice.reducer,
   token: tokenSlice.reducer,
   user: userSlice.reducer,

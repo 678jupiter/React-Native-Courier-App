@@ -122,6 +122,7 @@ const Register = () => {
       // setImageUri(result.uri);
       //setImageType(result.type);
       setImage(result.uri);
+      toggleModal();
     }
   };
 

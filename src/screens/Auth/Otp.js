@@ -16,6 +16,8 @@ import { userActions } from "../../../Redux/userSlice";
 import { tokenActions } from "../../../Redux/tokenSlice";
 import axios from "axios";
 import mime from "mime";
+import { curActions } from "../../../Redux/courSlice";
+import { fakeuserActions } from "../../../Redux/holderslice";
 
 const Otp = ({ route, navigation }) => {
   const [message, setMessage] = useState();
@@ -123,21 +125,25 @@ const Otp = ({ route, navigation }) => {
                       users_permissions_user: func_User_Id,
                       mobileNumber: phoneNumber,
                       active: true,
-                      image: func_UserImage,
+                      image: imageId,
                     },
                   })
                   .then((res) => {
+                    console.log("curuuu");
+                    console.log(res.data);
                     setIsSubmitting(false);
                     setinfo("");
                     dispatch(
-                      userActions.addUser({
-                        id: response.data.id,
-                        username: response.data.username,
-                        email: response.data.email,
-                        mobileNumber: response.data.mobileNumber,
-                        image: response.data.profilePicture,
+                      curActions.addcur({
+                        id: res.data.id,
+                        image: res.data.image,
+                        phoneNumber: res.data.mobileNumber,
+                        secondName: res.data.secondName,
+                        firstName: res.data.firstName,
+                        active: res.data.active,
                       })
                     );
+
                     dispatch(authActions.login());
                     handleMessage(message);
                     setMessage("");
@@ -149,6 +155,7 @@ const Otp = ({ route, navigation }) => {
                       icon: "success",
                       statusBarHeight: "34",
                     });
+                    dispatch(fakeuserActions.addFake([]));
                   })
                   .catch((error) => {
                     alert(`Merging User as Couri ${error}`);
