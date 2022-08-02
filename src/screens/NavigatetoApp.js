@@ -48,6 +48,7 @@ const NavigatetoApp = ({ route, navigation }) => {
     customermobilenumber,
     Flat,
     customerName,
+    restaurantDataName,
   } = route.params;
   //const { status } = route.params;
   const { Odishes } = route.params;
@@ -345,13 +346,26 @@ const NavigatetoApp = ({ route, navigation }) => {
         <SafeAreaView style={styles.safe}>
           <View style={styles.body}>
             <View style={styles.statusView}>
-              <Text style={styles.statusText}>{status}</Text>
+              <Text style={styles.statusText}>
+                You Have Accepted The Delivery
+              </Text>
+            </View>
+            <View style={styles.userNameView}>
+              <View style={styles.secondUsernameView}>
+                <Feather
+                  name="user"
+                  size={26}
+                  color="black"
+                  style={{ width: "10%" }}
+                />
+                <Text style={{ width: "50%" }}>{customerName}</Text>
+              </View>
             </View>
             <View style={styles.addressView}>
               <View style={styles.secondAdrressView}>
                 <Entypo
                   name="address"
-                  size={24}
+                  size={26}
                   color="black"
                   style={{ width: "10%" }}
                 />
@@ -363,7 +377,7 @@ const NavigatetoApp = ({ route, navigation }) => {
               <View style={styles.secondBuildingView}>
                 <FontAwesome
                   name="building"
-                  size={24}
+                  size={26}
                   color="black"
                   style={{ width: "10%" }}
                 />
@@ -373,18 +387,6 @@ const NavigatetoApp = ({ route, navigation }) => {
 
             <View style={styles.flatView}>
               <Text>{Flat}</Text>
-            </View>
-
-            <View style={styles.userNameView}>
-              <View style={styles.secondUsernameView}>
-                <Feather
-                  name="user"
-                  size={24}
-                  color="black"
-                  style={{ width: "10%" }}
-                />
-                <Text style={{ width: "50%" }}>{customerName}</Text>
-              </View>
             </View>
 
             <View style={styles.callView}>
@@ -415,7 +417,9 @@ const NavigatetoApp = ({ route, navigation }) => {
                 style={[styles.button, styles.buttonClose]}
                 onPress={() => PickUp()}
               >
-                <Text style={styles.textStyle}>GO TO ITISHA RESTAURANT</Text>
+                <Text style={styles.textStyle}>
+                  Go T {restaurantDataName} Restaurant
+                </Text>
               </Pressable>
             </View>
           </View>
@@ -428,13 +432,26 @@ const NavigatetoApp = ({ route, navigation }) => {
         <SafeAreaView style={styles.safe}>
           <View style={styles.body}>
             <View style={styles.statusView}>
-              <Text style={styles.statusText}>{status}</Text>
+              <Text style={styles.statusText}>
+                You Have Picked The Delivery
+              </Text>
+            </View>
+            <View style={styles.userNameView}>
+              <View style={styles.secondUsernameView}>
+                <Feather
+                  name="user"
+                  size={26}
+                  color="black"
+                  style={{ width: "10%" }}
+                />
+                <Text style={{ width: "50%" }}>{customerName}</Text>
+              </View>
             </View>
             <View style={styles.addressView}>
               <View style={styles.secondAdrressView}>
                 <Entypo
                   name="address"
-                  size={24}
+                  size={26}
                   color="black"
                   style={{ width: "10%" }}
                 />
@@ -446,7 +463,7 @@ const NavigatetoApp = ({ route, navigation }) => {
               <View style={styles.secondBuildingView}>
                 <FontAwesome
                   name="building"
-                  size={24}
+                  size={26}
                   color="black"
                   style={{ width: "10%" }}
                 />
@@ -456,18 +473,6 @@ const NavigatetoApp = ({ route, navigation }) => {
 
             <View style={styles.flatView}>
               <Text>{Flat}</Text>
-            </View>
-
-            <View style={styles.userNameView}>
-              <View style={styles.secondUsernameView}>
-                <Feather
-                  name="user"
-                  size={24}
-                  color="black"
-                  style={{ width: "10%" }}
-                />
-                <Text style={{ width: "50%" }}>{customerName}</Text>
-              </View>
             </View>
 
             <View style={styles.callView}>
@@ -532,13 +537,26 @@ const NavigatetoApp = ({ route, navigation }) => {
         <SafeAreaView style={styles.safe}>
           <View style={styles.body}>
             <View style={styles.statusView}>
-              <Text style={styles.statusText}>{status}</Text>
+              <Text style={styles.statusText}>
+                You Are Delivering To {customerName}
+              </Text>
+            </View>
+            <View style={styles.userNameView}>
+              <View style={styles.secondUsernameView}>
+                <Feather
+                  name="user"
+                  size={26}
+                  color="black"
+                  style={{ width: "10%" }}
+                />
+                <Text style={{ width: "50%" }}>{customerName}</Text>
+              </View>
             </View>
             <View style={styles.addressView}>
               <View style={styles.secondAdrressView}>
                 <Entypo
                   name="address"
-                  size={24}
+                  size={26}
                   color="black"
                   style={{ width: "10%" }}
                 />
@@ -550,7 +568,7 @@ const NavigatetoApp = ({ route, navigation }) => {
               <View style={styles.secondBuildingView}>
                 <FontAwesome
                   name="building"
-                  size={24}
+                  size={26}
                   color="black"
                   style={{ width: "10%" }}
                 />
@@ -560,18 +578,6 @@ const NavigatetoApp = ({ route, navigation }) => {
 
             <View style={styles.flatView}>
               <Text>{Flat}</Text>
-            </View>
-
-            <View style={styles.userNameView}>
-              <View style={styles.secondUsernameView}>
-                <Feather
-                  name="user"
-                  size={24}
-                  color="black"
-                  style={{ width: "10%" }}
-                />
-                <Text style={{ width: "50%" }}>{customerName}</Text>
-              </View>
             </View>
 
             <View style={styles.callView}>
@@ -636,13 +642,26 @@ const NavigatetoApp = ({ route, navigation }) => {
         <SafeAreaView style={styles.safe}>
           <View style={styles.body}>
             <View style={styles.statusView}>
-              <Text style={styles.statusText}>{status}</Text>
+              <Text style={styles.statusText}>
+                You Have Arrived You Can Call {customerName}
+              </Text>
+            </View>
+            <View style={styles.userNameView}>
+              <View style={styles.secondUsernameView}>
+                <Feather
+                  name="user"
+                  size={26}
+                  color="black"
+                  style={{ width: "10%" }}
+                />
+                <Text style={{ width: "50%" }}>{customerName}</Text>
+              </View>
             </View>
             <View style={styles.addressView}>
               <View style={styles.secondAdrressView}>
                 <Entypo
                   name="address"
-                  size={24}
+                  size={26}
                   color="black"
                   style={{ width: "10%" }}
                 />
@@ -654,7 +673,7 @@ const NavigatetoApp = ({ route, navigation }) => {
               <View style={styles.secondBuildingView}>
                 <FontAwesome
                   name="building"
-                  size={24}
+                  size={26}
                   color="black"
                   style={{ width: "10%" }}
                 />
@@ -664,18 +683,6 @@ const NavigatetoApp = ({ route, navigation }) => {
 
             <View style={styles.flatView}>
               <Text>{Flat}</Text>
-            </View>
-
-            <View style={styles.userNameView}>
-              <View style={styles.secondUsernameView}>
-                <Feather
-                  name="user"
-                  size={24}
-                  color="black"
-                  style={{ width: "10%" }}
-                />
-                <Text style={{ width: "50%" }}>{customerName}</Text>
-              </View>
             </View>
 
             <View style={styles.callView}>
@@ -706,7 +713,7 @@ const NavigatetoApp = ({ route, navigation }) => {
                 style={[styles.button, styles.buttonClose]}
                 onPress={() => Delivered()}
               >
-                <Text style={styles.textStyle}>FINISH</Text>
+                <Text style={styles.textStyle}>Finish Delivery</Text>
               </Pressable>
             </View>
           </View>
@@ -720,11 +727,22 @@ const NavigatetoApp = ({ route, navigation }) => {
             <View style={styles.statusView}>
               <Text style={styles.statusText}>{status}</Text>
             </View>
+            <View style={styles.userNameView}>
+              <View style={styles.secondUsernameView}>
+                <Feather
+                  name="user"
+                  size={26}
+                  color="black"
+                  style={{ width: "10%" }}
+                />
+                <Text style={{ width: "50%" }}>{customerName}</Text>
+              </View>
+            </View>
             <View style={styles.addressView}>
               <View style={styles.secondAdrressView}>
                 <Entypo
                   name="address"
-                  size={24}
+                  size={26}
                   color="black"
                   style={{ width: "10%" }}
                 />
@@ -736,7 +754,7 @@ const NavigatetoApp = ({ route, navigation }) => {
               <View style={styles.secondBuildingView}>
                 <FontAwesome
                   name="building"
-                  size={24}
+                  size={26}
                   color="black"
                   style={{ width: "10%" }}
                 />
@@ -746,18 +764,6 @@ const NavigatetoApp = ({ route, navigation }) => {
 
             <View style={styles.flatView}>
               <Text>{Flat}</Text>
-            </View>
-
-            <View style={styles.userNameView}>
-              <View style={styles.secondUsernameView}>
-                <Feather
-                  name="user"
-                  size={24}
-                  color="black"
-                  style={{ width: "10%" }}
-                />
-                <Text style={{ width: "50%" }}>{customerName}</Text>
-              </View>
             </View>
 
             <View style={styles.callView}>
@@ -799,7 +805,7 @@ const NavigatetoApp = ({ route, navigation }) => {
         <View
           style={{ justifyContent: "center", alignItems: "center", flex: 1 }}
         >
-          <Text>No Taks.</Text>
+          <Text>No Available Jobs.</Text>
         </View>
       );
     }
@@ -853,7 +859,7 @@ const styles = StyleSheet.create({
     // padding: 10,
     alignSelf: "flex-end",
     marginRight: 10,
-    color: "black",
+    color: "green",
     fontSize: 18,
     borderRadius: 10,
   },
