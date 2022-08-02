@@ -5,7 +5,6 @@ import { combineReducers } from "redux";
 import authSlice from "./AuthSlice";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import userSlice from "./userSlice";
-import orderSlice from "./OrderSlice";
 import activeOrderSlice from "./ActiveOrderSlice";
 import tokenSlice from "./tokenSlice";
 import holderSlice from "./holderslice";

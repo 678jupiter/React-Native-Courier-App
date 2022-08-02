@@ -11,6 +11,7 @@ import OrdersScreen from "../screens/OrdersScreen";
 import NavigatetoApp from "../screens/NavigatetoApp";
 import { colors, primaryColor } from "../../config";
 import ProfileImage from "../screens/Auth/ProfileImage";
+import ForgotPassword from "../screens/Auth/ForgotPassword";
 
 const MsemaKweli = () => {
   const Stack = createNativeStackNavigator();
@@ -74,6 +75,13 @@ const MsemaKweli = () => {
               options={{ title: "Verify" }}
             />
             <Stack.Screen name="profile Picture" component={ProfileImage} />
+            <Stack.Screen
+              name="ForgotPassword"
+              component={ForgotPassword}
+              options={{
+                title: "Reset your password",
+              }}
+            />
           </>
         )}
       </Stack.Navigator>

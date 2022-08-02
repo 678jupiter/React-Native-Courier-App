@@ -15,7 +15,6 @@ import axios from "axios";
 import * as TaskManager from "expo-task-manager";
 import * as Location from "expo-location";
 import { getPreciseDistance } from "geolib";
-import { activeOrderActions } from "../../Redux/ActiveOrderSlice";
 import { Entypo } from "@expo/vector-icons";
 import { FontAwesome } from "@expo/vector-icons";
 import { Feather } from "@expo/vector-icons";
@@ -24,6 +23,8 @@ import { gql, useQuery } from "@apollo/client";
 import { colors, secondaryColor } from "../../config";
 import noNetworkImg from "../../assets/images/noNetwork.png";
 import { Button } from "../../components/atoms";
+import call from "react-native-phone-call";
+import { useFocusEffect } from "@react-navigation/native";
 
 const GET_JOB_STATUS = gql`
   query ($id: ID!) {
@@ -61,6 +62,16 @@ const NavigatetoApp = ({ route, navigation }) => {
   const { loading, error, data, refetch } = useQuery(GET_JOB_STATUS, {
     variables: { id },
   });
+
+  useFocusEffect(
+    React.useCallback(() => {
+      let isActive = true;
+      refetch();
+      return () => {
+        isActive = false;
+      };
+    }, [navigation])
+  );
 
   if (loading) {
     return (
@@ -148,7 +159,7 @@ const NavigatetoApp = ({ route, navigation }) => {
           },
         })
         .then(function (response) {
-          setInite(1);
+          refetch();
           console.log("res");
           requestPermissions();
           navigateToRestaurant();
@@ -165,10 +176,10 @@ const NavigatetoApp = ({ route, navigation }) => {
             status: "Delivering",
           },
         })
-        .then(function (response) {
-          setInite(1);
+        .then(function () {
+          refetch();
           console.log("res");
-          requestPermissions();
+          // requestPermissions();
           navigateToCustomer();
         })
         .catch(function (error) {
@@ -183,12 +194,12 @@ const NavigatetoApp = ({ route, navigation }) => {
             status: "Arrived",
           },
         })
-        .then(function (response) {
-          setInite(1);
+        .then(function () {
+          refetch();
           console.log("res");
           console.log("close");
           // TaskManager.unregisterAllTasksAsync();
-          dispatch(activeOrderActions.notActive());
+          // dispatch(activeOrderActions.notActive());
         })
         .catch(function (error) {
           console.log(error);
@@ -202,11 +213,9 @@ const NavigatetoApp = ({ route, navigation }) => {
           },
         })
         .then(function (response) {
-          setInite(1);
-          console.log("res");
-          console.log("close");
-          TaskManager.unregisterAllTasksAsync();
-          dispatch(activeOrderActions.notActive());
+          refetch();
+          // TaskManager.unregisterAllTasksAsync();
+          //dispatch(activeOrderActions.notActive());
         })
         .catch(function (error) {
           console.log(error);
@@ -383,11 +392,11 @@ const NavigatetoApp = ({ route, navigation }) => {
                 <Ionicons
                   name="ios-call-sharp"
                   size={34}
-                  color="black"
+                  color="green"
                   style={{ width: "20%" }}
-                  // onPress={() =>
-                  //   call({ number: `${customermobilenumber}`, prompt: false })
-                  // }
+                  onPress={() =>
+                    call({ number: `${customermobilenumber}`, prompt: false })
+                  }
                 />
 
                 <Text style={{ width: "50%" }}>{customermobilenumber}</Text>
@@ -466,11 +475,11 @@ const NavigatetoApp = ({ route, navigation }) => {
                 <Ionicons
                   name="ios-call-sharp"
                   size={34}
-                  color="black"
+                  color="green"
                   style={{ width: "20%" }}
-                  // onPress={() =>
-                  //   call({ number: `${customermobilenumber}`, prompt: false })
-                  // }
+                  onPress={() =>
+                    call({ number: `${customermobilenumber}`, prompt: false })
+                  }
                 />
 
                 <Text style={{ width: "50%" }}>{customermobilenumber}</Text>
@@ -483,6 +492,28 @@ const NavigatetoApp = ({ route, navigation }) => {
                   <Text>{item.attributes.dishName}</Text>
                 </View>
               ))}
+            </View>
+            <View
+              style={{
+                flex: 0.1,
+                justifyContent: "center",
+              }}
+            >
+              <Pressable
+                style={[styles.button2, styles.buttonClose2]}
+                onPress={() => navigateToRestaurant()}
+              >
+                <Text style={styles.textStyle}>Pick Up Delivery</Text>
+              </Pressable>
+            </View>
+            <View
+              style={{
+                justifyContent: "center",
+                alignContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <Text style={{ fontSize: 20 }}>OR</Text>
             </View>
             <View style={styles.PressableView}>
               <Pressable
@@ -548,11 +579,11 @@ const NavigatetoApp = ({ route, navigation }) => {
                 <Ionicons
                   name="ios-call-sharp"
                   size={34}
-                  color="black"
+                  color="green"
                   style={{ width: "20%" }}
-                  // onPress={() =>
-                  //   call({ number: `${customermobilenumber}`, prompt: false })
-                  // }
+                  onPress={() =>
+                    call({ number: `${customermobilenumber}`, prompt: false })
+                  }
                 />
 
                 <Text style={{ width: "50%" }}>{customermobilenumber}</Text>
@@ -565,6 +596,28 @@ const NavigatetoApp = ({ route, navigation }) => {
                   <Text>{item.attributes.dishName}</Text>
                 </View>
               ))}
+            </View>
+            <View
+              style={{
+                flex: 0.1,
+                justifyContent: "center",
+              }}
+            >
+              <Pressable
+                style={[styles.button2, styles.buttonClose2]}
+                onPress={() => navigateToCustomer()}
+              >
+                <Text style={styles.textStyle}>Continue Delivering</Text>
+              </Pressable>
+            </View>
+            <View
+              style={{
+                justifyContent: "center",
+                alignContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <Text style={{ fontSize: 20 }}>OR</Text>
             </View>
             <View style={styles.PressableView}>
               <Pressable
@@ -630,11 +683,11 @@ const NavigatetoApp = ({ route, navigation }) => {
                 <Ionicons
                   name="ios-call-sharp"
                   size={34}
-                  color="black"
+                  color="green"
                   style={{ width: "20%" }}
-                  // onPress={() =>
-                  //   call({ number: `${customermobilenumber}`, prompt: false })
-                  // }
+                  onPress={() =>
+                    call({ number: `${customermobilenumber}`, prompt: false })
+                  }
                 />
 
                 <Text style={{ width: "50%" }}>{customermobilenumber}</Text>
@@ -712,11 +765,11 @@ const NavigatetoApp = ({ route, navigation }) => {
                 <Ionicons
                   name="ios-call-sharp"
                   size={34}
-                  color="black"
+                  color="green"
                   style={{ width: "20%" }}
-                  // onPress={() =>
-                  //   call({ number: `${customermobilenumber}`, prompt: false })
-                  // }
+                  onPress={() =>
+                    call({ number: `${customermobilenumber}`, prompt: false })
+                  }
                 />
 
                 <Text style={{ width: "50%" }}>{customermobilenumber}</Text>
@@ -733,7 +786,7 @@ const NavigatetoApp = ({ route, navigation }) => {
             <View style={styles.PressableView}>
               <Pressable
                 style={[styles.button, styles.buttonClose]}
-                // onPress={() => Delivered()}
+                onPress={() => navigation.goBack()}
               >
                 <Text style={styles.textStyle}>Find More Orders</Text>
               </Pressable>
@@ -778,6 +831,17 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+  button2: {
+    borderRadius: 20,
+    padding: 10,
+    elevation: 2,
+    height: 60,
+  },
+  buttonClose2: {
+    backgroundColor: "grey",
+    justifyContent: "center",
+    alignItems: "center",
+  },
   textStyle: {
     color: "white",
     fontWeight: "bold",
@@ -785,11 +849,11 @@ const styles = StyleSheet.create({
     fontSize: 28,
   },
   statusText: {
-    backgroundColor: "green",
-    padding: 10,
+    //  backgroundColor: "green",
+    // padding: 10,
     alignSelf: "flex-end",
     marginRight: 10,
-    color: "white",
+    color: "black",
     fontSize: 18,
     borderRadius: 10,
   },
@@ -838,7 +902,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
   },
-  PressableView: { flex: 0.3, backgroundColor: "white" },
+  PressableView: { flex: 0.2, backgroundColor: "white" },
   dishesView: { flex: 0.25, paddingTop: 10 },
   safeContainer: { backgroundColor: colors.light_gray, flex: 1 },
   networkText: {
