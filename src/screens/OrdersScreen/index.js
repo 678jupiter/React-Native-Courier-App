@@ -15,6 +15,7 @@ import { colors, secondaryColor } from "../../../config";
 import axios from "axios";
 import noNetworkImg from "../../../assets/images/noNetwork.png";
 import { Button } from "../../../components/atoms";
+import { useFocusEffect } from "@react-navigation/native";
 
 const GET_MY_JOBS = gql`
   query ($id: ID!) {
@@ -48,6 +49,8 @@ const OrdersScreen = ({ navigation }) => {
   const isActivated = useSelector((state) => state.active.isActive);
   const token = useSelector((state) => state.token.userToken);
   const courierData = useSelector((state) => state.cur.curmeta);
+  const restaurantData = useSelector((state) => state.myres.aboutRes);
+
   const authAxios = axios.create({
     baseURL: "https://myfoodcms189.herokuapp.com/api/",
     headers: {
@@ -120,16 +123,59 @@ const OrdersScreen = ({ navigation }) => {
           customermobilenumber: customermobilenumber,
           customerName: userName,
           Flat: Flat,
+          restaurantDataName: restaurantData.rname,
         });
       })
       .catch(function (error) {
         console.log(`Accept order Failed${error.message}`);
       });
   };
+  const continueWth = (item) => {
+    const {
+      data: {
+        id,
+        attributes: {
+          Flat,
+          address,
+          buildinginfo,
+          customermobilenumber,
+          dishes,
+          Latitude,
+          Longitude,
+          status,
+          userName,
+        },
+      },
+    } = item;
+    console.log(id);
+
+    navigation.navigate("OrdersDeliveryScreen2", {
+      Odishes: dishes,
+      id: `${id}`,
+      customerLatitude: `${Latitude}`,
+      customerLongitude: `${Longitude}`,
+      address: `${address}`,
+      building: `${buildinginfo}`,
+      status: `${status}`,
+      customermobilenumber: customermobilenumber,
+      customerName: userName,
+      Flat: Flat,
+      restaurantDataName: restaurantData.rname,
+    });
+  };
   const id = courierData.cid;
   const { loading, error, data, refetch } = useQuery(GET_MY_JOBS, {
     variables: { id },
   });
+  // useFocusEffect(
+  //   React.useCallback(() => {
+  //     let isActive = true;
+  //     refetch();
+  //     return () => {
+  //       isActive = false;
+  //     };
+  //   }, [navigation])
+  // );
 
   if (loading) {
     return (
@@ -200,117 +246,730 @@ const OrdersScreen = ({ navigation }) => {
       },
     } = data;
     //  console.log(restaurant_order);
-    return (
-      <SafeAreaView style={styles.safeContainer}>
-        <View style={{ flex: 1, paddingTop: 20 }}>
-          <Pressable
-            style={{
-              flexDirection: "row",
-              margin: 10,
-              borderColor: "#3FC060",
-              borderWidth: 2,
-              borderRadius: 12,
-            }}
-            onPress={() =>
-              AlertButton(restaurant_order.data.id, restaurant_order)
-            }
-          >
-            <View style={{ flex: 1, marginLeft: 10, paddingVertical: 5 }}>
-              <Text style={{ color: "green" }}>ITISHA FOOD</Text>
-              <Text style={{ color: "orange" }}>
-                {restaurant_order.data.attributes.status}
+    if (restaurant_order.data.attributes.status === "Delivered") {
+      return (
+        <SafeAreaView style={styles.safeContainer}>
+          <View style={{ flex: 1, paddingTop: 20 }}>
+            <View
+              style={{
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 20,
+                  fontWeight: "bold",
+                  fontStyle: "italic",
+                }}
+              >
+                {restaurantData.rname}
               </Text>
-              {isActivated ? (
-                <Text style={{ color: "red" }}>COMPLETE YOUR ORDER</Text>
-              ) : (
-                <Text style={{ color: "red" }}>NEW ORDER</Text>
-              )}
-              <Text style={{ marginTop: 10, color: "black" }}>
-                Delivery Details:
-              </Text>
-              <View style={{ flexDirection: "row" }}>
-                <Text
-                  style={{
-                    fontSize: 18,
-                    fontWeight: "500",
-                    color: "black",
-                    width: "50%",
-                  }}
-                >
-                  Customer Name:
-                </Text>
-                <Text
-                  style={{
-                    fontSize: 18,
-                    fontWeight: "500",
-                    color: "black",
-                    width: "50%",
-                  }}
-                >
-                  {restaurant_order.data.attributes.userName}
-                </Text>
-              </View>
+            </View>
 
-              <View style={{ flexDirection: "row" }}>
-                <Text
-                  style={{
-                    fontSize: 18,
-                    fontWeight: "500",
-                    color: "black",
-                    width: "50%",
-                  }}
-                >
-                  Building:
-                </Text>
-                <Text
-                  style={{
-                    fontSize: 18,
-                    fontWeight: "500",
-                    color: "black",
-                    width: "50%",
-                  }}
-                >
-                  {restaurant_order.data.attributes.buildinginfo}
-                </Text>
-              </View>
+            <View
+              style={{
+                flex: 1,
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <Text style={{ fontSize: 20 }}>You have no jobs Available.</Text>
+            </View>
+          </View>
+        </SafeAreaView>
+      );
+    }
 
-              <View style={{ flexDirection: "row" }}>
-                <Text
-                  style={{
-                    fontSize: 18,
-                    fontWeight: "500",
-                    color: "black",
-                    width: "50%",
-                  }}
-                >
-                  Flat:
-                </Text>
-                <Text
-                  style={{
-                    fontSize: 18,
-                    fontWeight: "500",
-                    color: "black",
-                    width: "50%",
-                  }}
-                >
-                  {restaurant_order.data.attributes.Flat}
-                </Text>
-              </View>
-              <Text style={{ marginTop: 10, color: "black" }}>
-                Food details:
+    if (restaurant_order.data.attributes.status === "Ready") {
+      return (
+        <SafeAreaView style={styles.safeContainer}>
+          <View style={{ flex: 1, paddingTop: 20 }}>
+            <View
+              style={{
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 20,
+                  fontWeight: "bold",
+                  fontStyle: "italic",
+                }}
+              >
+                {restaurantData.rname}
               </Text>
-              {restaurant_order.data.attributes.dishes.map((dish) => (
-                <View key={dish.id}>
-                  <Text style={{ color: "grey" }}>
-                    {dish.attributes.dishName}
+            </View>
+
+            <Pressable
+              style={{
+                flexDirection: "row",
+                margin: 10,
+                borderColor: "#3FC060",
+                borderWidth: 2,
+                borderRadius: 12,
+              }}
+              onPress={() =>
+                AlertButton(restaurant_order.data.id, restaurant_order)
+              }
+            >
+              <View style={{ flex: 1, marginLeft: 10, paddingVertical: 5 }}>
+                <Text style={{ color: "green" }}>ITISHA FOOD</Text>
+                <Text style={{ color: "orange" }}>
+                  {restaurant_order.data.attributes.status}
+                </Text>
+                {isActivated ? (
+                  <Text style={{ color: "red" }}>COMPLETE YOUR ORDER</Text>
+                ) : (
+                  <Text style={{ color: "red" }}>NEW ORDER</Text>
+                )}
+                <Text style={{ marginTop: 10, color: "black" }}>
+                  Delivery Details:
+                </Text>
+                <View style={{ flexDirection: "row" }}>
+                  <Text
+                    style={{
+                      fontSize: 18,
+                      fontWeight: "500",
+                      color: "black",
+                      width: "50%",
+                    }}
+                  >
+                    Customer Name:
+                  </Text>
+                  <Text
+                    style={{
+                      fontSize: 18,
+                      fontWeight: "500",
+                      color: "black",
+                      width: "50%",
+                    }}
+                  >
+                    {restaurant_order.data.attributes.userName}
                   </Text>
                 </View>
-              ))}
+
+                <View style={{ flexDirection: "row" }}>
+                  <Text
+                    style={{
+                      fontSize: 18,
+                      fontWeight: "500",
+                      color: "black",
+                      width: "50%",
+                    }}
+                  >
+                    Building:
+                  </Text>
+                  <Text
+                    style={{
+                      fontSize: 18,
+                      fontWeight: "500",
+                      color: "black",
+                      width: "50%",
+                    }}
+                  >
+                    {restaurant_order.data.attributes.buildinginfo}
+                  </Text>
+                </View>
+
+                <View style={{ flexDirection: "row" }}>
+                  <Text
+                    style={{
+                      fontSize: 18,
+                      fontWeight: "500",
+                      color: "black",
+                      width: "50%",
+                    }}
+                  >
+                    Flat:
+                  </Text>
+                  <Text
+                    style={{
+                      fontSize: 18,
+                      fontWeight: "500",
+                      color: "black",
+                      width: "50%",
+                    }}
+                  >
+                    {restaurant_order.data.attributes.Flat}
+                  </Text>
+                </View>
+                <Text style={{ marginTop: 10, color: "black" }}>
+                  Food details:
+                </Text>
+                {restaurant_order.data.attributes.dishes.map((dish) => (
+                  <View key={dish.id}>
+                    <Text style={{ color: "grey" }}>
+                      {dish.attributes.dishName}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            </Pressable>
+          </View>
+        </SafeAreaView>
+      );
+    }
+    if (restaurant_order.data.attributes.status === "Accepted") {
+      return (
+        <SafeAreaView style={styles.safeContainer}>
+          <View style={{ flex: 1, paddingTop: 20 }}>
+            <View
+              style={{
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 20,
+                  fontWeight: "bold",
+                  fontStyle: "italic",
+                }}
+              >
+                {restaurantData.rname}
+              </Text>
             </View>
-          </Pressable>
-        </View>
-      </SafeAreaView>
-    );
+
+            <Pressable
+              style={{
+                flexDirection: "row",
+                margin: 10,
+                borderColor: "#3FC060",
+                borderWidth: 2,
+                borderRadius: 12,
+              }}
+              onPress={() => continueWth(restaurant_order)}
+            >
+              <View style={{ flex: 1, marginLeft: 10, paddingVertical: 5 }}>
+                <Text style={{ color: "green" }}>ITISHA FOOD</Text>
+                <Text style={{ color: "orange" }}>
+                  {restaurant_order.data.attributes.status}
+                </Text>
+                {isActivated ? (
+                  <Text style={{ color: "red" }}>COMPLETE YOUR ORDER</Text>
+                ) : (
+                  <Text style={{ color: "red" }}>NEW ORDER</Text>
+                )}
+                <Text style={{ marginTop: 10, color: "black" }}>
+                  Delivery Details:
+                </Text>
+                <View style={{ flexDirection: "row" }}>
+                  <Text
+                    style={{
+                      fontSize: 18,
+                      fontWeight: "500",
+                      color: "black",
+                      width: "50%",
+                    }}
+                  >
+                    Customer Name:
+                  </Text>
+                  <Text
+                    style={{
+                      fontSize: 18,
+                      fontWeight: "500",
+                      color: "black",
+                      width: "50%",
+                    }}
+                  >
+                    {restaurant_order.data.attributes.userName}
+                  </Text>
+                </View>
+
+                <View style={{ flexDirection: "row" }}>
+                  <Text
+                    style={{
+                      fontSize: 18,
+                      fontWeight: "500",
+                      color: "black",
+                      width: "50%",
+                    }}
+                  >
+                    Building:
+                  </Text>
+                  <Text
+                    style={{
+                      fontSize: 18,
+                      fontWeight: "500",
+                      color: "black",
+                      width: "50%",
+                    }}
+                  >
+                    {restaurant_order.data.attributes.buildinginfo}
+                  </Text>
+                </View>
+
+                <View style={{ flexDirection: "row" }}>
+                  <Text
+                    style={{
+                      fontSize: 18,
+                      fontWeight: "500",
+                      color: "black",
+                      width: "50%",
+                    }}
+                  >
+                    Flat:
+                  </Text>
+                  <Text
+                    style={{
+                      fontSize: 18,
+                      fontWeight: "500",
+                      color: "black",
+                      width: "50%",
+                    }}
+                  >
+                    {restaurant_order.data.attributes.Flat}
+                  </Text>
+                </View>
+                <Text style={{ marginTop: 10, color: "black" }}>
+                  Food details:
+                </Text>
+                {restaurant_order.data.attributes.dishes.map((dish) => (
+                  <View key={dish.id}>
+                    <Text style={{ color: "grey" }}>
+                      {dish.attributes.dishName}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            </Pressable>
+          </View>
+        </SafeAreaView>
+      );
+    }
+    if (restaurant_order.data.attributes.status === "PickUp") {
+      return (
+        <SafeAreaView style={styles.safeContainer}>
+          <View style={{ flex: 1, paddingTop: 20 }}>
+            <View
+              style={{
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 20,
+                  fontWeight: "bold",
+                  fontStyle: "italic",
+                }}
+              >
+                {restaurantData.rname}
+              </Text>
+            </View>
+
+            <Pressable
+              style={{
+                flexDirection: "row",
+                margin: 10,
+                borderColor: "#3FC060",
+                borderWidth: 2,
+                borderRadius: 12,
+              }}
+              onPress={() => continueWth(restaurant_order)}
+            >
+              <View style={{ flex: 1, marginLeft: 10, paddingVertical: 5 }}>
+                <Text style={{ color: "green" }}>ITISHA FOOD</Text>
+                <Text style={{ color: "orange" }}>
+                  {restaurant_order.data.attributes.status}
+                </Text>
+                {isActivated ? (
+                  <Text style={{ color: "red" }}>COMPLETE YOUR ORDER</Text>
+                ) : (
+                  <Text style={{ color: "red" }}>NEW ORDER</Text>
+                )}
+                <Text style={{ marginTop: 10, color: "black" }}>
+                  Delivery Details:
+                </Text>
+                <View style={{ flexDirection: "row" }}>
+                  <Text
+                    style={{
+                      fontSize: 18,
+                      fontWeight: "500",
+                      color: "black",
+                      width: "50%",
+                    }}
+                  >
+                    Customer Name:
+                  </Text>
+                  <Text
+                    style={{
+                      fontSize: 18,
+                      fontWeight: "500",
+                      color: "black",
+                      width: "50%",
+                    }}
+                  >
+                    {restaurant_order.data.attributes.userName}
+                  </Text>
+                </View>
+
+                <View style={{ flexDirection: "row" }}>
+                  <Text
+                    style={{
+                      fontSize: 18,
+                      fontWeight: "500",
+                      color: "black",
+                      width: "50%",
+                    }}
+                  >
+                    Building:
+                  </Text>
+                  <Text
+                    style={{
+                      fontSize: 18,
+                      fontWeight: "500",
+                      color: "black",
+                      width: "50%",
+                    }}
+                  >
+                    {restaurant_order.data.attributes.buildinginfo}
+                  </Text>
+                </View>
+
+                <View style={{ flexDirection: "row" }}>
+                  <Text
+                    style={{
+                      fontSize: 18,
+                      fontWeight: "500",
+                      color: "black",
+                      width: "50%",
+                    }}
+                  >
+                    Flat:
+                  </Text>
+                  <Text
+                    style={{
+                      fontSize: 18,
+                      fontWeight: "500",
+                      color: "black",
+                      width: "50%",
+                    }}
+                  >
+                    {restaurant_order.data.attributes.Flat}
+                  </Text>
+                </View>
+                <Text style={{ marginTop: 10, color: "black" }}>
+                  Food details:
+                </Text>
+                {restaurant_order.data.attributes.dishes.map((dish) => (
+                  <View key={dish.id}>
+                    <Text style={{ color: "grey" }}>
+                      {dish.attributes.dishName}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            </Pressable>
+          </View>
+        </SafeAreaView>
+      );
+    }
+    if (restaurant_order.data.attributes.status === "Delivering") {
+      return (
+        <SafeAreaView style={styles.safeContainer}>
+          <View style={{ flex: 1, paddingTop: 20 }}>
+            <View
+              style={{
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 20,
+                  fontWeight: "bold",
+                  fontStyle: "italic",
+                }}
+              >
+                {restaurantData.rname}
+              </Text>
+            </View>
+
+            <Pressable
+              style={{
+                flexDirection: "row",
+                margin: 10,
+                borderColor: "#3FC060",
+                borderWidth: 2,
+                borderRadius: 12,
+              }}
+              onPress={() => continueWth(restaurant_order)}
+            >
+              <View style={{ flex: 1, marginLeft: 10, paddingVertical: 5 }}>
+                <Text style={{ color: "green" }}>ITISHA FOOD</Text>
+                <Text style={{ color: "orange" }}>
+                  {restaurant_order.data.attributes.status}
+                </Text>
+                {isActivated ? (
+                  <Text style={{ color: "red" }}>COMPLETE YOUR ORDER</Text>
+                ) : (
+                  <Text style={{ color: "red" }}>NEW ORDER</Text>
+                )}
+                <Text style={{ marginTop: 10, color: "black" }}>
+                  Delivery Details:
+                </Text>
+                <View style={{ flexDirection: "row" }}>
+                  <Text
+                    style={{
+                      fontSize: 18,
+                      fontWeight: "500",
+                      color: "black",
+                      width: "50%",
+                    }}
+                  >
+                    Customer Name:
+                  </Text>
+                  <Text
+                    style={{
+                      fontSize: 18,
+                      fontWeight: "500",
+                      color: "black",
+                      width: "50%",
+                    }}
+                  >
+                    {restaurant_order.data.attributes.userName}
+                  </Text>
+                </View>
+
+                <View style={{ flexDirection: "row" }}>
+                  <Text
+                    style={{
+                      fontSize: 18,
+                      fontWeight: "500",
+                      color: "black",
+                      width: "50%",
+                    }}
+                  >
+                    Building:
+                  </Text>
+                  <Text
+                    style={{
+                      fontSize: 18,
+                      fontWeight: "500",
+                      color: "black",
+                      width: "50%",
+                    }}
+                  >
+                    {restaurant_order.data.attributes.buildinginfo}
+                  </Text>
+                </View>
+
+                <View style={{ flexDirection: "row" }}>
+                  <Text
+                    style={{
+                      fontSize: 18,
+                      fontWeight: "500",
+                      color: "black",
+                      width: "50%",
+                    }}
+                  >
+                    Flat:
+                  </Text>
+                  <Text
+                    style={{
+                      fontSize: 18,
+                      fontWeight: "500",
+                      color: "black",
+                      width: "50%",
+                    }}
+                  >
+                    {restaurant_order.data.attributes.Flat}
+                  </Text>
+                </View>
+                <Text style={{ marginTop: 10, color: "black" }}>
+                  Food details:
+                </Text>
+                {restaurant_order.data.attributes.dishes.map((dish) => (
+                  <View key={dish.id}>
+                    <Text style={{ color: "grey" }}>
+                      {dish.attributes.dishName}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            </Pressable>
+          </View>
+        </SafeAreaView>
+      );
+    }
+    if (restaurant_order.data.attributes.status === "Arrived") {
+      return (
+        <SafeAreaView style={styles.safeContainer}>
+          <View style={{ flex: 1, paddingTop: 20 }}>
+            <View
+              style={{
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 20,
+                  fontWeight: "bold",
+                  fontStyle: "italic",
+                }}
+              >
+                {restaurantData.rname}
+              </Text>
+            </View>
+
+            {restaurant_order.data.attributes.status === "Delivered" ? (
+              <View
+                style={{
+                  flex: 1,
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <Text style={{ fontSize: 20 }}>
+                  You have no jobs Available.
+                </Text>
+              </View>
+            ) : (
+              <Pressable
+                style={{
+                  flexDirection: "row",
+                  margin: 10,
+                  borderColor: "#3FC060",
+                  borderWidth: 2,
+                  borderRadius: 12,
+                }}
+                onPress={() => continueWth(restaurant_order)}
+              >
+                <View style={{ flex: 1, marginLeft: 10, paddingVertical: 5 }}>
+                  <Text style={{ color: "green" }}>ITISHA FOOD</Text>
+                  <Text style={{ color: "orange" }}>
+                    {restaurant_order.data.attributes.status}
+                  </Text>
+                  {isActivated ? (
+                    <Text style={{ color: "red" }}>COMPLETE YOUR ORDER</Text>
+                  ) : (
+                    <Text style={{ color: "red" }}>NEW ORDER</Text>
+                  )}
+                  <Text style={{ marginTop: 10, color: "black" }}>
+                    Delivery Details:
+                  </Text>
+                  <View style={{ flexDirection: "row" }}>
+                    <Text
+                      style={{
+                        fontSize: 18,
+                        fontWeight: "500",
+                        color: "black",
+                        width: "50%",
+                      }}
+                    >
+                      Customer Name:
+                    </Text>
+                    <Text
+                      style={{
+                        fontSize: 18,
+                        fontWeight: "500",
+                        color: "black",
+                        width: "50%",
+                      }}
+                    >
+                      {restaurant_order.data.attributes.userName}
+                    </Text>
+                  </View>
+
+                  <View style={{ flexDirection: "row" }}>
+                    <Text
+                      style={{
+                        fontSize: 18,
+                        fontWeight: "500",
+                        color: "black",
+                        width: "50%",
+                      }}
+                    >
+                      Building:
+                    </Text>
+                    <Text
+                      style={{
+                        fontSize: 18,
+                        fontWeight: "500",
+                        color: "black",
+                        width: "50%",
+                      }}
+                    >
+                      {restaurant_order.data.attributes.buildinginfo}
+                    </Text>
+                  </View>
+
+                  <View style={{ flexDirection: "row" }}>
+                    <Text
+                      style={{
+                        fontSize: 18,
+                        fontWeight: "500",
+                        color: "black",
+                        width: "50%",
+                      }}
+                    >
+                      Flat:
+                    </Text>
+                    <Text
+                      style={{
+                        fontSize: 18,
+                        fontWeight: "500",
+                        color: "black",
+                        width: "50%",
+                      }}
+                    >
+                      {restaurant_order.data.attributes.Flat}
+                    </Text>
+                  </View>
+                  <Text style={{ marginTop: 10, color: "black" }}>
+                    Food details:
+                  </Text>
+                  {restaurant_order.data.attributes.dishes.map((dish) => (
+                    <View key={dish.id}>
+                      <Text style={{ color: "grey" }}>
+                        {dish.attributes.dishName}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+              </Pressable>
+            )}
+          </View>
+        </SafeAreaView>
+      );
+    } else {
+      return (
+        <SafeAreaView style={styles.safeContainer}>
+          <View style={{ flex: 1, paddingTop: 20 }}>
+            <View
+              style={{
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 20,
+                  fontWeight: "bold",
+                  fontStyle: "italic",
+                }}
+              >
+                {restaurantData.rname}
+              </Text>
+            </View>
+
+            <View
+              style={{
+                flex: 1,
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <Text style={{ fontSize: 20 }}>You have no jobs Available.</Text>
+            </View>
+          </View>
+        </SafeAreaView>
+      );
+    }
   }
 };
 
