@@ -10,6 +10,8 @@ import activeOrderSlice from "./ActiveOrderSlice";
 import tokenSlice from "./tokenSlice";
 import holderSlice from "./holderslice";
 import curSlice from "./courSlice";
+import resSlice from "./myRestSlice";
+import myLocationSlice from "./myLocationSlice";
 
 const persistConfig = {
   key: "ayee",
@@ -22,8 +24,10 @@ const reducers = combineReducers({
   auth: authSlice.reducer,
   token: tokenSlice.reducer,
   user: userSlice.reducer,
-  orders: orderSlice.reducer,
   active: activeOrderSlice.reducer,
+  myres: resSlice.reducer,
+  myloc: myLocationSlice.reducer,
+
   // other reducers goes here...
 });
 

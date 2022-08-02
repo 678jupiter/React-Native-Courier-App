@@ -27,8 +27,7 @@ const Otp = ({ route, navigation }) => {
   const [error, setError] = useState({});
   const dispatch = useDispatch();
 
-  // const { phoneNumber } = route.params;
-  const phoneNumber = "0799568838";
+  const { phoneNumber } = route.params;
   const [invalidCode, setInvalidCode] = useState(false);
   const fakeUser = useSelector((state) => state.fuser.userfmeta);
   const handleMessage = (message, type = "FAILED") => {
@@ -40,7 +39,7 @@ const Otp = ({ route, navigation }) => {
 
   const globallFunction = () => {
     setIsSubmitting(true);
-    setinfo("Registering your Acount...");
+    setinfo("Registering your Account...");
     let username = fakeUser.firstName;
     let email = fakeUser.email;
     let password = fakeUser.password;
@@ -129,20 +128,34 @@ const Otp = ({ route, navigation }) => {
                     },
                   })
                   .then((res) => {
-                    console.log("curuuu");
-                    console.log(res.data);
                     setIsSubmitting(false);
                     setinfo("");
+                    const {
+                      data: {
+                        id,
+                        attributes: {
+                          mobileNumber,
+                          secondName,
+                          firstName,
+                          active,
+                          image,
+                        },
+                      },
+                    } = res.data;
                     dispatch(
                       curActions.addcur({
-                        id: res.data.id,
-                        image: res.data.image,
-                        phoneNumber: res.data.mobileNumber,
-                        secondName: res.data.secondName,
-                        firstName: res.data.firstName,
-                        active: res.data.active,
+                        cid: id,
+                        image: image,
+                        phoneNumber: mobileNumber,
+                        secondName: secondName,
+                        firstName: firstName,
+                        active: active,
                       })
                     );
+
+                    console.log("curuuu");
+                    console.log(id);
+                    console.log(res.data);
 
                     dispatch(authActions.login());
                     handleMessage(message);

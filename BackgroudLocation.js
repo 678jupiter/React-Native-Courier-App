@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Alert, Animated, StyleSheet, View, BackHandler } from "react-native";
 import * as Location from "expo-location";
 import MsemaKweli from "./src/navigation/MasterAuth";
+import LocationTrack from "./src/components/LocationTrack";
 
 // Instruct SplashScreen not to hide yet, we want to do this manually
 SplashScreen.preventAutoHideAsync().catch(() => {
@@ -14,7 +15,7 @@ SplashScreen.preventAutoHideAsync().catch(() => {
 export default function BackGroundApp() {
   return (
     <AnimatedAppLoader image={require("./assets/splash.png")}>
-      <MsemaKweli />
+      <LocationTrack />
     </AnimatedAppLoader>
   );
 }
@@ -70,6 +71,7 @@ function AnimatedSplashScreen({ children, image }) {
     console.log(status);
     if (status === "granted") {
       console.log(status);
+
       setAppReady(true);
     }
     if (status !== "granted") {

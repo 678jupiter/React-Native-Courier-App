@@ -18,6 +18,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { userActions } from "../../../Redux/userSlice";
 import { authActions } from "../../../Redux/AuthSlice";
 import { tokenActions } from "../../../Redux/tokenSlice";
+import axios from "axios";
+import { curActions } from "../../../Redux/courSlice";
 
 const LogIn = ({ navigation }) => {
   const [identifier, setEmail] = useState("");
@@ -28,36 +30,77 @@ const LogIn = ({ navigation }) => {
   const handlePasswordVisibility = () => {};
   const handleSubmit = async () => {
     setIsSubmitting(true);
+    let userId = "";
+    axios
+      .post(`https://myfoodcms189.herokuapp.com/api/auth/local/`, {
+        identifier: identifier,
+        password: password,
+      })
+      .then((res) => {
+        const {
+          jwt,
+          user: { id, username, mobileNumber, secondName, email },
+        } = res.data;
+        console.log(id);
+        userId = id;
+        dispatch(
+          userActions.addUser({
+            id: id,
+            username: username,
+            email: email,
+            mobileNumber: mobileNumber,
+            secondName: secondName,
+          })
+        );
+        dispatch(
+          tokenActions.addToken({
+            jwt: jwt,
+          })
+        );
 
-    try {
-      await login(identifier, password)
-        .then((res) => {
-          setIsSubmitting(true);
-          dispatch(
-            userActions.addUser({
-              id: res.data.user.id,
-              username: res.data.user.username,
-              email: res.data.user.email,
-              mobileNumber: res.data.user.mobileNumber,
-              secondName: res.data.user.secondName,
-            })
-          );
-          dispatch(
-            tokenActions.addToken({
-              jwt: res.data.jwt,
-            })
-          );
-          dispatch(authActions.login());
-          setIsSubmitting(false);
-        })
-        .catch((error) => {
-          setIsSubmitting(false);
-          console.log("2" + error);
-        });
-    } catch (error) {
-      setIsSubmitting(false);
-      console.log("1" + error);
-    }
+        axios
+          .get(`https://myfoodcms189.herokuapp.com/api/couriers/?populate=*`)
+          .then((res) => {
+            const { data } = res.data;
+            //  console.log(data);
+            const courierMe = data.filter(
+              (item) =>
+                item.attributes.users_permissions_user.data.id === userId
+            );
+            console.log(courierMe);
+            const [
+              {
+                id,
+                attributes: {
+                  active,
+                  secondName,
+                  firstName,
+                  image,
+                  mobileNumber,
+                },
+              },
+            ] = courierMe;
+            dispatch(
+              curActions.addcur({
+                cid: id,
+                image: image,
+                phoneNumber: mobileNumber,
+                secondName: secondName,
+                firstName: firstName,
+                active: active,
+              })
+            );
+            dispatch(authActions.login());
+
+            setIsSubmitting(false);
+          })
+          .catch((error) => {
+            console.log(`Get Couries${error}`);
+          });
+      })
+      .catch((error) => {
+        console.log(`Login ${error}`);
+      });
   };
 
   const space = Dimensions.get("screen").height / 28;

@@ -1,313 +1,863 @@
 import {
   Alert,
-  Button,
   Linking,
   SafeAreaView,
   StyleSheet,
   Text,
   View,
+  Pressable,
+  ActivityIndicator,
+  Image,
 } from "react-native";
-import React, { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import React, { useState } from "react";
+import { useSelector } from "react-redux";
 import axios from "axios";
-import { fetchOrders } from "../../Redux/orderActions";
-import io from "socket.io-client";
 import * as TaskManager from "expo-task-manager";
 import * as Location from "expo-location";
 import { getPreciseDistance } from "geolib";
 import { activeOrderActions } from "../../Redux/ActiveOrderSlice";
+import { Entypo } from "@expo/vector-icons";
+import { FontAwesome } from "@expo/vector-icons";
+import { Feather } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
+import { gql, useQuery } from "@apollo/client";
+import { colors, secondaryColor } from "../../config";
+import noNetworkImg from "../../assets/images/noNetwork.png";
+import { Button } from "../../components/atoms";
 
+const GET_JOB_STATUS = gql`
+  query ($id: ID!) {
+    restaurantOrder(id: $id) {
+      data {
+        id
+        attributes {
+          status
+        }
+      }
+    }
+  }
+`;
 const NavigatetoApp = ({ route, navigation }) => {
-  const { id } = route.params;
-  const { customerLatitude } = route.params;
-  const { customerLongitude } = route.params;
-  const { address } = route.params;
-  const { building } = route.params;
+  const {
+    id,
+    customerLatitude,
+    address,
+    building,
+    customerLongitude,
+    customermobilenumber,
+    Flat,
+    customerName,
+  } = route.params;
   //const { status } = route.params;
   const { Odishes } = route.params;
-  const navigate = () => {
-    Linking.openURL(
-      `google.navigation:q=${customerLatitude}+${customerLongitude}`
-    );
-  };
-
-  const socket = io("https://socketitisha.herokuapp.com");
-
-  function showRoom() {
-    console.log("Joined Room");
-  }
-  useEffect(() => {
-    const input = id;
-    socket.emit("enter_room", input, showRoom);
-  }, []);
-
   const [init, setInite] = useState(0);
-  const dispatch = useDispatch();
-  useEffect(() => {
-    let isCancelled = false;
-    dispatch(fetchOrders());
-    return () => {
-      isCancelled = true;
-    };
-  }, [init]);
-  const token = useSelector((state) => state.token.userToken);
-  const authAxios = axios.create({
-    baseURL: "https://myfoodcms189.herokuapp.com/api/",
-    headers: {
-      Authorization: `Bearer ${token.jwt}`,
-    },
-  });
-
-  const startDelivering = async () => {
-    await authAxios
-      .put(`restaurant-orders/${id}`, {
-        data: {
-          status: "Delivering",
-        },
-      })
-      .then(function (response) {
-        setInite(1);
-        console.log("res");
-        requestPermissions();
-      })
-      .catch(function (error) {
-        console.log(error);
-      });
-  };
-
-  const Arrived = async () => {
-    await authAxios
-      .put(`restaurant-orders/${id}`, {
-        data: {
-          status: "Arrived",
-        },
-      })
-      .then(function (response) {
-        setInite(1);
-        console.log("res");
-        console.log("close");
-        TaskManager.unregisterAllTasksAsync();
-        dispatch(activeOrderActions.notActive());
-      })
-      .catch(function (error) {
-        console.log(error);
-      });
-  };
   const [driverLocation, setDriverLocation] = useState(null);
 
   const [distance, setDistance] = useState();
   const [isDriverClose, setIsDriverClose] = useState(false);
+  const restaurantData = useSelector((state) => state.myres.aboutRes);
+  const token = useSelector((state) => state.token.userToken);
 
-  // check whetehr coDriv is Close to the custo
+  const { loading, error, data, refetch } = useQuery(GET_JOB_STATUS, {
+    variables: { id },
+  });
 
-  const checkLocationStatus = async () => {
-    let { status } = await Location.requestForegroundPermissionsAsync();
-    if (status !== "granted") {
-      Alert.alert(`Permission to access location was denied`, "");
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.safeContainer}>
+        <View style={styles.activity}>
+          <ActivityIndicator size="large" color={secondaryColor} />
+        </View>
+      </SafeAreaView>
+    );
+  }
+  if (error) {
+    console.log(`Failure @ GQL${error.message}`);
+    return (
+      <SafeAreaView style={styles.safeContainer}>
+        <View
+          style={{
+            flex: 1,
+            flexDirection: "column",
+            justifyContent: "space-around",
+            alignItems: "center",
+            backgroundColor: colors.light_gray,
 
-      return;
-    }
-
-    if (status === "granted") {
-      let result = await Location.getCurrentPositionAsync({});
-
-      var pdis = getPreciseDistance(
-        {
-          latitude: Number(customerLatitude),
-          longitude: Number(customerLongitude),
-        },
-        {
-          latitude: Number(result.coords.latitude),
-          longitude: Number(result.coords.longitude),
-        }
+            //alignItems: "stretch",
+            //margin: 20,
+          }}
+        >
+          <View
+            style={{
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <Text style={styles.networkTitle}>No Internet connection.</Text>
+            <Text style={styles.networkText}>
+              Please check your internet connection and then refresh the page.
+            </Text>
+          </View>
+          <View>
+            <Image source={noNetworkImg} style={{ width: 305, height: 159 }} />
+          </View>
+          <View>
+            <Button
+              label="Refresh"
+              radius={10}
+              txtSize={14}
+              padSizeY={28}
+              bgColor={colors.slate}
+              padSizeX={14}
+              borderWidth={0}
+              fontFam="CircularStdBold"
+              txtDecorationLine="none"
+              onPress={() => refetch()}
+            />
+          </View>
+        </View>
+      </SafeAreaView>
+    );
+  }
+  if (data) {
+    const navigateToCustomer = () => {
+      Linking.openURL(
+        `google.navigation:q=${customerLatitude}+${customerLongitude}`
       );
-      // alert(`Precise Distance\n\n${pdis} Meter\nOR\n${pdis / 1000} KM`);
-      setDistance(Number(pdis / 1000));
+    };
+    const navigateToRestaurant = () => {
+      Linking.openURL(
+        `google.navigation:q=${Number(restaurantData.rLat)}+${Number(
+          restaurantData.rLng
+        )}`
+      );
+    };
 
-      if (Number(pdis / 1000) <= 0.1) {
-        setIsDriverClose(true);
-        Arrived();
-      }
-    }
-    if (status !== "granted") {
-      allowLocation();
-    }
-  };
-  const allowLocation = async () => {
-    let res = await Location.hasServicesEnabledAsync();
-    if (res === false) {
-      Alert.alert(`Please allow Location`, "", [
-        {
-          text: "cancel",
-          onPress: () => navigation.goBack(),
-          style: "cancel",
-        },
-        { text: "OK", onPress: () => Location.enableNetworkProviderAsync() },
-      ]);
-    }
-    if (res === true) {
-      return;
-    }
-  };
+    const authAxios = axios.create({
+      baseURL: "https://myfoodcms189.herokuapp.com/api/",
+      headers: {
+        Authorization: `Bearer ${token.jwt}`,
+      },
+    });
 
-  useEffect(() => {
-    checkLocationStatus();
-  }, []);
-
-  const LOCATION_TASK_NAME = "background-location-task";
-  const requestPermissions = async () => {
-    const { status } = await Location.requestBackgroundPermissionsAsync();
-    console.log(status);
-    if (status === "granted") {
-      // Location.requestBackgroundPermissionsAsync();
-      await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-        accuracy: Location.Accuracy.High,
-        distanceInterval: 0,
-        deferredUpdatesInterval: 0,
-        deferredUpdatesDistance: 0,
-        pausesUpdatesAutomatically: false,
-      });
-    }
-  };
-  TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }) => {
-    if (error) {
-      // Error occurred - check `error.message` for more details.
-      return;
-    }
-    if (data) {
-      const { locations } = data;
-      const [
-        {
-          coords: { latitude, longitude },
-        },
-      ] = locations;
-      setDriverLocation({
-        latitude: latitude,
-        longitude: longitude,
-      });
-      authAxios
+    const PickUp = async () => {
+      await authAxios
         .put(`restaurant-orders/${id}`, {
           data: {
-            courierLat: JSON.stringify(latitude),
-            courierLng: JSON.stringify(longitude),
+            status: "PickUp",
           },
         })
-        .then(function () {
-          console.log("Updated");
+        .then(function (response) {
+          setInite(1);
+          console.log("res");
+          requestPermissions();
+          navigateToRestaurant();
         })
         .catch(function (error) {
           console.log(error);
         });
-      let roomName = id;
-      const inputM = {
-        courierLat: JSON.stringify(latitude),
-        courierLng: JSON.stringify(longitude),
-      };
-      socket.emit("new_message", inputM, roomName, () => {
-        console.log("emit");
-      });
+    };
+
+    const startDelivering = async () => {
+      await authAxios
+        .put(`restaurant-orders/${id}`, {
+          data: {
+            status: "Delivering",
+          },
+        })
+        .then(function (response) {
+          setInite(1);
+          console.log("res");
+          requestPermissions();
+          navigateToCustomer();
+        })
+        .catch(function (error) {
+          console.log(error);
+        });
+    };
+
+    const Arrived = async () => {
+      await authAxios
+        .put(`restaurant-orders/${id}`, {
+          data: {
+            status: "Arrived",
+          },
+        })
+        .then(function (response) {
+          setInite(1);
+          console.log("res");
+          console.log("close");
+          // TaskManager.unregisterAllTasksAsync();
+          dispatch(activeOrderActions.notActive());
+        })
+        .catch(function (error) {
+          console.log(error);
+        });
+    };
+    const Delivered = async () => {
+      await authAxios
+        .put(`restaurant-orders/${id}`, {
+          data: {
+            status: "Delivered",
+          },
+        })
+        .then(function (response) {
+          setInite(1);
+          console.log("res");
+          console.log("close");
+          TaskManager.unregisterAllTasksAsync();
+          dispatch(activeOrderActions.notActive());
+        })
+        .catch(function (error) {
+          console.log(error);
+        });
+    };
+
+    // check whetehr coDriv is Close to the custo
+
+    const checkLocationStatus = async () => {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert(`Permission to access location was denied`, "");
+
+        return;
+      }
+
+      if (status === "granted") {
+        let result = await Location.getCurrentPositionAsync({});
+
+        var pdis = getPreciseDistance(
+          {
+            latitude: Number(customerLatitude),
+            longitude: Number(customerLongitude),
+          },
+          {
+            latitude: Number(result.coords.latitude),
+            longitude: Number(result.coords.longitude),
+          }
+        );
+        // alert(`Precise Distance\n\n${pdis} Meter\nOR\n${pdis / 1000} KM`);
+        setDistance(Number(pdis / 1000));
+
+        if (Number(pdis / 1000) <= 0.1) {
+          setIsDriverClose(true);
+          Arrived();
+        }
+      }
+      if (status !== "granted") {
+        allowLocation();
+      }
+    };
+    const allowLocation = async () => {
+      let res = await Location.hasServicesEnabledAsync();
+      if (res === false) {
+        Alert.alert(`Please allow Location`, "", [
+          {
+            text: "cancel",
+            onPress: () => navigation.goBack(),
+            style: "cancel",
+          },
+          { text: "OK", onPress: () => Location.enableNetworkProviderAsync() },
+        ]);
+      }
+      if (res === true) {
+        return;
+      }
+    };
+
+    // useEffect(() => {
+    //   checkLocationStatus();
+    // }, []);
+
+    const LOCATION_TASK_NAME = "background-location-task";
+    const requestPermissions = async () => {
+      const { status } = await Location.requestBackgroundPermissionsAsync();
+      console.log(status);
+      if (status === "granted") {
+        // Location.requestBackgroundPermissionsAsync();
+        await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
+          accuracy: Location.Accuracy.High,
+          distanceInterval: 0,
+          deferredUpdatesInterval: 0,
+          deferredUpdatesDistance: 0,
+          pausesUpdatesAutomatically: false,
+        });
+      }
+    };
+    TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }) => {
+      if (error) {
+        // Error occurred - check `error.message` for more details.
+        return;
+      }
+      if (data) {
+        const { locations } = data;
+        const [
+          {
+            coords: { latitude, longitude },
+          },
+        ] = locations;
+        setDriverLocation({
+          latitude: latitude,
+          longitude: longitude,
+        });
+        authAxios
+          .put(`restaurant-orders/${id}`, {
+            data: {
+              courierLat: JSON.stringify(latitude),
+              courierLng: JSON.stringify(longitude),
+            },
+          })
+          .then(function () {
+            console.log("Updated");
+          })
+          .catch(function (error) {
+            console.log(error);
+          });
+        let roomName = id;
+        const inputM = {
+          courierLat: JSON.stringify(latitude),
+          courierLng: JSON.stringify(longitude),
+        };
+      }
+    });
+
+    // Find Order By Id
+
+    const {
+      restaurantOrder: {
+        data: {
+          attributes: { status },
+        },
+      },
+    } = data;
+
+    if (status === "Accepted") {
+      return (
+        <SafeAreaView style={styles.safe}>
+          <View style={styles.body}>
+            <View style={styles.statusView}>
+              <Text style={styles.statusText}>{status}</Text>
+            </View>
+            <View style={styles.addressView}>
+              <View style={styles.secondAdrressView}>
+                <Entypo
+                  name="address"
+                  size={24}
+                  color="black"
+                  style={{ width: "10%" }}
+                />
+                <Text style={{ width: "50%" }}>{address}</Text>
+              </View>
+            </View>
+
+            <View style={styles.buildingView}>
+              <View style={styles.secondBuildingView}>
+                <FontAwesome
+                  name="building"
+                  size={24}
+                  color="black"
+                  style={{ width: "10%" }}
+                />
+                <Text style={{ width: "50%" }}>{building}</Text>
+              </View>
+            </View>
+
+            <View style={styles.flatView}>
+              <Text>{Flat}</Text>
+            </View>
+
+            <View style={styles.userNameView}>
+              <View style={styles.secondUsernameView}>
+                <Feather
+                  name="user"
+                  size={24}
+                  color="black"
+                  style={{ width: "10%" }}
+                />
+                <Text style={{ width: "50%" }}>{customerName}</Text>
+              </View>
+            </View>
+
+            <View style={styles.callView}>
+              <View style={styles.secondCallView}>
+                <Ionicons
+                  name="ios-call-sharp"
+                  size={34}
+                  color="black"
+                  style={{ width: "20%" }}
+                  // onPress={() =>
+                  //   call({ number: `${customermobilenumber}`, prompt: false })
+                  // }
+                />
+
+                <Text style={{ width: "50%" }}>{customermobilenumber}</Text>
+              </View>
+            </View>
+            <View style={styles.dishesView}>
+              <Text style={{ color: "grey" }}> Food details:</Text>
+              {Odishes.map((item, i) => (
+                <View key={i}>
+                  <Text>{item.attributes.dishName}</Text>
+                </View>
+              ))}
+            </View>
+            <View style={styles.PressableView}>
+              <Pressable
+                style={[styles.button, styles.buttonClose]}
+                onPress={() => PickUp()}
+              >
+                <Text style={styles.textStyle}>GO TO ITISHA RESTAURANT</Text>
+              </Pressable>
+            </View>
+          </View>
+        </SafeAreaView>
+      );
     }
-  });
 
-  const riderOrders = useSelector((state) => state.orders.riderOrders);
+    if (status === "PickUp") {
+      return (
+        <SafeAreaView style={styles.safe}>
+          <View style={styles.body}>
+            <View style={styles.statusView}>
+              <Text style={styles.statusText}>{status}</Text>
+            </View>
+            <View style={styles.addressView}>
+              <View style={styles.secondAdrressView}>
+                <Entypo
+                  name="address"
+                  size={24}
+                  color="black"
+                  style={{ width: "10%" }}
+                />
+                <Text style={{ width: "50%" }}>{address}</Text>
+              </View>
+            </View>
 
-  const i = riderOrders.data;
+            <View style={styles.buildingView}>
+              <View style={styles.secondBuildingView}>
+                <FontAwesome
+                  name="building"
+                  size={24}
+                  color="black"
+                  style={{ width: "10%" }}
+                />
+                <Text style={{ width: "50%" }}>{building}</Text>
+              </View>
+            </View>
 
-  // Find Order By Id
-  const result = i.filter((item) => item.id === Number(id));
-  const [
-    {
-      attributes: { status },
-    },
-  ] = result;
+            <View style={styles.flatView}>
+              <Text>{Flat}</Text>
+            </View>
 
-  if (status === "Accepted") {
-    return (
-      <SafeAreaView
-        style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
-      >
-        <View>
-          <Text>Order Id{id}</Text>
-          <Text>{address}</Text>
-          <Text>{building}</Text>
-          <Text>{status}</Text>
-          <Text>distance{distance}</Text>
-          <Text>Complete Your Order</Text>
-        </View>
-        <Button
-          title="Start your Delivery"
-          // change status to Delivering
-          onPress={() => startDelivering()}
-        />
-      </SafeAreaView>
-    );
-  }
-  if (status === "Delivering") {
-    return (
-      <SafeAreaView
-        style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
-      >
-        <View>
-          {isDriverClose ? (
-            <Text style={{ color: "green" }}>Close</Text>
-          ) : (
-            <Text style={{ color: "blue" }}>Not Close</Text>
-          )}
-        </View>
-        <View>
-          <Text>Order Id{id}</Text>
-          <Text>{address}</Text>
-          <Text>{building}</Text>
-          <Text>{status}</Text>
-          <Text>distance{distance}</Text>
+            <View style={styles.userNameView}>
+              <View style={styles.secondUsernameView}>
+                <Feather
+                  name="user"
+                  size={24}
+                  color="black"
+                  style={{ width: "10%" }}
+                />
+                <Text style={{ width: "50%" }}>{customerName}</Text>
+              </View>
+            </View>
 
-          <Text>Complete Your Order</Text>
-          <Text>You are Currently Delivering the order</Text>
+            <View style={styles.callView}>
+              <View style={styles.secondCallView}>
+                <Ionicons
+                  name="ios-call-sharp"
+                  size={34}
+                  color="black"
+                  style={{ width: "20%" }}
+                  // onPress={() =>
+                  //   call({ number: `${customermobilenumber}`, prompt: false })
+                  // }
+                />
+
+                <Text style={{ width: "50%" }}>{customermobilenumber}</Text>
+              </View>
+            </View>
+            <View style={styles.dishesView}>
+              <Text style={{ color: "grey" }}> Food details:</Text>
+              {Odishes.map((item, i) => (
+                <View key={i}>
+                  <Text>{item.attributes.dishName}</Text>
+                </View>
+              ))}
+            </View>
+            <View style={styles.PressableView}>
+              <Pressable
+                style={[styles.button, styles.buttonClose]}
+                onPress={() => startDelivering()}
+              >
+                <Text style={styles.textStyle}>Start Delivery</Text>
+              </Pressable>
+            </View>
+          </View>
+        </SafeAreaView>
+      );
+    }
+    if (status === "Delivering") {
+      return (
+        <SafeAreaView style={styles.safe}>
+          <View style={styles.body}>
+            <View style={styles.statusView}>
+              <Text style={styles.statusText}>{status}</Text>
+            </View>
+            <View style={styles.addressView}>
+              <View style={styles.secondAdrressView}>
+                <Entypo
+                  name="address"
+                  size={24}
+                  color="black"
+                  style={{ width: "10%" }}
+                />
+                <Text style={{ width: "50%" }}>{address}</Text>
+              </View>
+            </View>
+
+            <View style={styles.buildingView}>
+              <View style={styles.secondBuildingView}>
+                <FontAwesome
+                  name="building"
+                  size={24}
+                  color="black"
+                  style={{ width: "10%" }}
+                />
+                <Text style={{ width: "50%" }}>{building}</Text>
+              </View>
+            </View>
+
+            <View style={styles.flatView}>
+              <Text>{Flat}</Text>
+            </View>
+
+            <View style={styles.userNameView}>
+              <View style={styles.secondUsernameView}>
+                <Feather
+                  name="user"
+                  size={24}
+                  color="black"
+                  style={{ width: "10%" }}
+                />
+                <Text style={{ width: "50%" }}>{customerName}</Text>
+              </View>
+            </View>
+
+            <View style={styles.callView}>
+              <View style={styles.secondCallView}>
+                <Ionicons
+                  name="ios-call-sharp"
+                  size={34}
+                  color="black"
+                  style={{ width: "20%" }}
+                  // onPress={() =>
+                  //   call({ number: `${customermobilenumber}`, prompt: false })
+                  // }
+                />
+
+                <Text style={{ width: "50%" }}>{customermobilenumber}</Text>
+              </View>
+            </View>
+            <View style={styles.dishesView}>
+              <Text style={{ color: "grey" }}> Food details:</Text>
+              {Odishes.map((item, i) => (
+                <View key={i}>
+                  <Text>{item.attributes.dishName}</Text>
+                </View>
+              ))}
+            </View>
+            <View style={styles.PressableView}>
+              <Pressable
+                style={[styles.button, styles.buttonClose]}
+                onPress={() => Arrived()}
+              >
+                <Text style={styles.textStyle}>Arrived</Text>
+              </Pressable>
+            </View>
+          </View>
+        </SafeAreaView>
+      );
+    }
+    if (status === "Arrived") {
+      return (
+        <SafeAreaView style={styles.safe}>
+          <View style={styles.body}>
+            <View style={styles.statusView}>
+              <Text style={styles.statusText}>{status}</Text>
+            </View>
+            <View style={styles.addressView}>
+              <View style={styles.secondAdrressView}>
+                <Entypo
+                  name="address"
+                  size={24}
+                  color="black"
+                  style={{ width: "10%" }}
+                />
+                <Text style={{ width: "50%" }}>{address}</Text>
+              </View>
+            </View>
+
+            <View style={styles.buildingView}>
+              <View style={styles.secondBuildingView}>
+                <FontAwesome
+                  name="building"
+                  size={24}
+                  color="black"
+                  style={{ width: "10%" }}
+                />
+                <Text style={{ width: "50%" }}>{building}</Text>
+              </View>
+            </View>
+
+            <View style={styles.flatView}>
+              <Text>{Flat}</Text>
+            </View>
+
+            <View style={styles.userNameView}>
+              <View style={styles.secondUsernameView}>
+                <Feather
+                  name="user"
+                  size={24}
+                  color="black"
+                  style={{ width: "10%" }}
+                />
+                <Text style={{ width: "50%" }}>{customerName}</Text>
+              </View>
+            </View>
+
+            <View style={styles.callView}>
+              <View style={styles.secondCallView}>
+                <Ionicons
+                  name="ios-call-sharp"
+                  size={34}
+                  color="black"
+                  style={{ width: "20%" }}
+                  // onPress={() =>
+                  //   call({ number: `${customermobilenumber}`, prompt: false })
+                  // }
+                />
+
+                <Text style={{ width: "50%" }}>{customermobilenumber}</Text>
+              </View>
+            </View>
+            <View style={styles.dishesView}>
+              <Text style={{ color: "grey" }}> Food details:</Text>
+              {Odishes.map((item, i) => (
+                <View key={i}>
+                  <Text>{item.attributes.dishName}</Text>
+                </View>
+              ))}
+            </View>
+            <View style={styles.PressableView}>
+              <Pressable
+                style={[styles.button, styles.buttonClose]}
+                onPress={() => Delivered()}
+              >
+                <Text style={styles.textStyle}>FINISH</Text>
+              </Pressable>
+            </View>
+          </View>
+        </SafeAreaView>
+      );
+    }
+    if (status === "Delivered") {
+      return (
+        <SafeAreaView style={styles.safe}>
+          <View style={styles.body}>
+            <View style={styles.statusView}>
+              <Text style={styles.statusText}>{status}</Text>
+            </View>
+            <View style={styles.addressView}>
+              <View style={styles.secondAdrressView}>
+                <Entypo
+                  name="address"
+                  size={24}
+                  color="black"
+                  style={{ width: "10%" }}
+                />
+                <Text style={{ width: "50%" }}>{address}</Text>
+              </View>
+            </View>
+
+            <View style={styles.buildingView}>
+              <View style={styles.secondBuildingView}>
+                <FontAwesome
+                  name="building"
+                  size={24}
+                  color="black"
+                  style={{ width: "10%" }}
+                />
+                <Text style={{ width: "50%" }}>{building}</Text>
+              </View>
+            </View>
+
+            <View style={styles.flatView}>
+              <Text>{Flat}</Text>
+            </View>
+
+            <View style={styles.userNameView}>
+              <View style={styles.secondUsernameView}>
+                <Feather
+                  name="user"
+                  size={24}
+                  color="black"
+                  style={{ width: "10%" }}
+                />
+                <Text style={{ width: "50%" }}>{customerName}</Text>
+              </View>
+            </View>
+
+            <View style={styles.callView}>
+              <View style={styles.secondCallView}>
+                <Ionicons
+                  name="ios-call-sharp"
+                  size={34}
+                  color="black"
+                  style={{ width: "20%" }}
+                  // onPress={() =>
+                  //   call({ number: `${customermobilenumber}`, prompt: false })
+                  // }
+                />
+
+                <Text style={{ width: "50%" }}>{customermobilenumber}</Text>
+              </View>
+            </View>
+            <View style={styles.dishesView}>
+              <Text style={{ color: "grey" }}> Food details:</Text>
+              {Odishes.map((item, i) => (
+                <View key={i}>
+                  <Text>{item.attributes.dishName}</Text>
+                </View>
+              ))}
+            </View>
+            <View style={styles.PressableView}>
+              <Pressable
+                style={[styles.button, styles.buttonClose]}
+                // onPress={() => Delivered()}
+              >
+                <Text style={styles.textStyle}>Find More Orders</Text>
+              </Pressable>
+            </View>
+          </View>
+        </SafeAreaView>
+      );
+    } else {
+      return (
+        <View
+          style={{ justifyContent: "center", alignItems: "center", flex: 1 }}
+        >
+          <Text>No Taks.</Text>
         </View>
-        <Button title="Arrived" onPress={() => Arrived()} />
-      </SafeAreaView>
-    );
-  }
-  if (status === "Arrived") {
-    return (
-      <SafeAreaView
-        style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
-      >
-        <View>
-          <Text>Order Id{id}</Text>
-          <Text>{address}</Text>
-          <Text>{building}</Text>
-          <Text>{status}</Text>
-          <Text>Complete Your Order</Text>
-        </View>
-        <Button title="Complete your Order" />
-      </SafeAreaView>
-    );
-  }
-  if (status === "Delivered") {
-    return (
-      <SafeAreaView
-        style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
-      >
-        <View>
-          <Text>Order Id{id}</Text>
-          <Text>{address}</Text>
-          <Text>{building}</Text>
-          <Text>{status}</Text>
-          <Text>Complete Your Order</Text>
-        </View>
-        <Button title="Find More Orders" />
-      </SafeAreaView>
-    );
-  } else {
-    return (
-      <View style={{ justifyContent: "center", alignItems: "center", flex: 1 }}>
-        <Text>No Taks.</Text>
-      </View>
-    );
+      );
+    }
   }
 };
 
 export default NavigatetoApp;
 
-const styles = StyleSheet.create({});
+const styles = StyleSheet.create({
+  safe: {
+    paddingTop: 20,
+    flex: 1,
+    backgroundColor: "white",
+  },
+  body: {
+    flex: 1,
+    backgroundColor: "white",
+    marginLeft: 10,
+    marginRight: 10,
+  },
+  button: {
+    borderRadius: 20,
+    padding: 10,
+    elevation: 2,
+    height: 60,
+  },
+  buttonClose: {
+    backgroundColor: "#2196F3",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  textStyle: {
+    color: "white",
+    fontWeight: "bold",
+    textAlign: "center",
+    fontSize: 28,
+  },
+  statusText: {
+    backgroundColor: "green",
+    padding: 10,
+    alignSelf: "flex-end",
+    marginRight: 10,
+    color: "white",
+    fontSize: 18,
+    borderRadius: 10,
+  },
+  statusView: {
+    flex: 0.1,
+    backgroundColor: "white",
+    justifyContent: "center",
+  },
+  addressView: {
+    flex: 0.1,
+    backgroundColor: "white",
+    justifyContent: "center",
+  },
+  secondAdrressView: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  buildingView: {
+    flex: 0.1,
+    backgroundColor: "white",
+    justifyContent: "center",
+  },
+  secondBuildingView: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  flatView: {
+    flex: 0.1,
+    justifyContent: "center",
+  },
+  userNameView: {
+    flex: 0.1,
+    backgroundColor: "white",
+    justifyContent: "center",
+  },
+  secondUsernameView: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  callView: {
+    flex: 0.1,
+    backgroundColor: "white",
+    justifyContent: "center",
+  },
+  secondCallView: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  PressableView: { flex: 0.3, backgroundColor: "white" },
+  dishesView: { flex: 0.25, paddingTop: 10 },
+  safeContainer: { backgroundColor: colors.light_gray, flex: 1 },
+  networkText: {
+    fontFamily: "CircularStdBook",
+    fontSize: 16,
+    lineHeight: 25,
+  },
+  networkTitle: {
+    fontFamily: "CircularStdBold",
+    fontSize: 24,
+    marginBottom: 0,
+  },
+  activity: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+});

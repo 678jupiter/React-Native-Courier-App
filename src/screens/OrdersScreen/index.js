@@ -1,320 +1,339 @@
-import React, { useRef, useMemo, useEffect } from "react";
+import React, { useEffect } from "react";
 import {
   View,
   Text,
-  useWindowDimensions,
   ActivityIndicator,
   Alert,
-  Button,
+  SafeAreaView,
+  Image,
+  StyleSheet,
 } from "react-native";
-import BottomSheet, { BottomSheetFlatList } from "@gorhom/bottom-sheet";
-import MapView, { Marker } from "react-native-maps";
-import { Entypo } from "@expo/vector-icons";
-import { gql } from "@apollo/client";
+import { gql, useQuery } from "@apollo/client";
 import Pressable from "react-native/Libraries/Components/Pressable/Pressable";
-import { useDispatch, useSelector } from "react-redux";
-import { fetchOrders } from "../../../Redux/orderActions";
-import { colors } from "../../../config";
-import { useFocusEffect } from "@react-navigation/native";
+import { useSelector } from "react-redux";
+import { colors, secondaryColor } from "../../../config";
 import axios from "axios";
-import { activeOrderActions } from "../../../Redux/ActiveOrderSlice";
+import noNetworkImg from "../../../assets/images/noNetwork.png";
+import { Button } from "../../../components/atoms";
+
+const GET_MY_JOBS = gql`
+  query ($id: ID!) {
+    courier(id: $id) {
+      data {
+        id
+        attributes {
+          restaurant_order {
+            data {
+              id
+              attributes {
+                userName
+                dishes
+                address
+                Latitude
+                Longitude
+                customermobilenumber
+                buildinginfo
+                Flat
+                status
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+`;
 
 const OrdersScreen = ({ navigation }) => {
-  const dispatch = useDispatch();
-  useFocusEffect(
-    React.useCallback(() => {
-      let isActive = true;
-
-      dispatch(fetchOrders());
-
-      return () => {
-        isActive = false;
-      };
-    }, [dispatch])
-  );
-
-  const riderOrders = useSelector((state) => state.orders.riderOrders);
   const isActivated = useSelector((state) => state.active.isActive);
-  const bottomSheetRef = useRef(null);
-  const { width, height } = useWindowDimensions();
-  const snapPoints = useMemo(() => ["12%", "95%"], []);
   const token = useSelector((state) => state.token.userToken);
-  const AlertButton = (item) =>
-    Alert.alert("Accept Order", "", [
-      {
-        text: "Cancel",
-        onPress: () => console.log("Cancel Pressed"),
-        style: "cancel",
-      },
-      { text: "OK", onPress: () => AcceptOder(item) },
-    ]);
+  const courierData = useSelector((state) => state.cur.curmeta);
   const authAxios = axios.create({
     baseURL: "https://myfoodcms189.herokuapp.com/api/",
     headers: {
       Authorization: `Bearer ${token.jwt}`,
     },
   });
-  const AcceptOder = async (item) => {
+
+  const getCourierDistanceBetween = async () => {
     await authAxios
-      .put(`restaurant-orders/${item.id}`, {
+      .get(`couriers/${courierData.cid}`)
+      .then((res) => {
+        const {
+          data: {
+            attributes: { distanceFromRestaurant },
+          },
+        } = res.data;
+        console.log(distanceFromRestaurant);
+        console.log("Recieved distance between");
+      })
+      .catch((error) => {
+        console.log(`Failure @ Distance between${error}`);
+      });
+  };
+  useEffect(() => {
+    getCourierDistanceBetween();
+  }, []);
+
+  const AlertButton = (item, restaurant_order) =>
+    Alert.alert("Accept Order", "", [
+      {
+        text: "Cancel",
+        onPress: () => console.log("Cancel Pressed"),
+        style: "cancel",
+      },
+      { text: "OK", onPress: () => AcceptOder(item, restaurant_order) },
+    ]);
+
+  const AcceptOder = async (item, restaurant_order) => {
+    await authAxios
+      .put(`restaurant-orders/${item}`, {
         data: {
           status: "Accepted",
         },
       })
-      .then(function (response) {
-        console.log("res");
-        dispatch(activeOrderActions.active());
+      .then(function (res) {
+        console.log(res.data);
+        const {
+          data: {
+            attributes: {
+              Flat,
+              dishes,
+              Latitude,
+              Longitude,
+              address,
+              buildinginfo,
+              status,
+              customermobilenumber,
+              userName,
+            },
+          },
+        } = res.data;
         navigation.navigate("OrdersDeliveryScreen2", {
-          Odishes: item.attributes.dishes,
-          id: `${item.id}`,
-          customerLatitude: `${item.attributes.Latitude}`,
-          customerLongitude: `${item.attributes.Longitude}`,
-          address: `${item.attributes.address}`,
-          building: `${item.attributes.buildinginfo}`,
-          status: `${item.attributes.status}`,
+          Odishes: dishes,
+          id: `${item}`,
+          customerLatitude: `${Latitude}`,
+          customerLongitude: `${Longitude}`,
+          address: `${address}`,
+          building: `${buildinginfo}`,
+          status: `${status}`,
+          customermobilenumber: customermobilenumber,
+          customerName: userName,
+          Flat: Flat,
         });
       })
       .catch(function (error) {
-        console.log(error);
+        console.log(`Accept order Failed${error.message}`);
       });
   };
+  const id = courierData.cid;
+  const { loading, error, data, refetch } = useQuery(GET_MY_JOBS, {
+    variables: { id },
+  });
 
-  const changeActiveStatus = () => {
-    console.log(`Changing from ${isActivated}`);
-    if (isActivated === true) {
-      dispatch(activeOrderActions.notActive());
-    }
-    if (isActivated === false) {
-      dispatch(activeOrderActions.active());
-    }
-  };
-  const userData = useSelector((state) => state.user.usermeta);
-
-  console.log(userData);
-
-  if (riderOrders.length === 0) {
+  if (loading) {
     return (
-      <View style={{ justifyContent: "center", alignItems: "center", flex: 1 }}>
-        <ActivityIndicator size="large" color={colors.colors} />
-      </View>
+      <SafeAreaView style={styles.safeContainer}>
+        <View style={styles.activity}>
+          <ActivityIndicator size="large" color={secondaryColor} />
+        </View>
+      </SafeAreaView>
     );
   }
-  const i = riderOrders.data;
 
-  // if isActivated is false
-  const result = i.filter((item) => item.attributes.status === "Ready");
-
-  // if isActivated is true
-  const Acc_Orders = i.filter(
-    (item) =>
-      item.attributes.status === "Accepted" ||
-      item.attributes.status === "Delivering"
-  );
-  if (result.length !== 0) {
-    const [
-      {
-        attributes: { dishes },
-      },
-    ] = result;
+  if (error) {
+    console.log(`Failure @ GQL${error.message}`);
     return (
-      <View style={{ backgroundColor: "lightblue", flex: 1 }}>
-        {/* {ACTIVE_ORDERS} */}
-        {isActivated ? (
-          <BottomSheet index={1} ref={bottomSheetRef} snapPoints={snapPoints}>
-            <View style={{ alignItems: "center", marginBottom: 30 }}>
-              <Text
-                style={{
-                  fontSize: 20,
-                  fontWeight: "600",
-                  letterSpacing: 0.5,
-                  paddingBottom: 5,
-                }}
-              >
-                You're Online
-              </Text>
-              <Text style={{ letterSpacing: 0.5, color: "grey" }}>
-                Available Orders: {Acc_Orders.length}
-              </Text>
-            </View>
-            {Acc_Orders ? (
-              <BottomSheetFlatList
-                data={Acc_Orders}
-                renderItem={({ item }) => {
-                  return (
-                    <Pressable
-                      style={{
-                        flexDirection: "row",
-                        margin: 10,
-                        borderColor: "#3FC060",
-                        borderWidth: 2,
-                        borderRadius: 12,
-                      }}
-                      onPress={() =>
-                        navigation.navigate("OrdersDeliveryScreen2", {
-                          Odishes: item.attributes.dishes,
-                          id: `${item.id}`,
-                          customerLatitude: `${item.attributes.Latitude}`,
-                          customerLongitude: `${item.attributes.Longitude}`,
-                          address: `${item.attributes.address}`,
-                          building: `${item.attributes.buildinginfo}`,
-                          status: `${item.attributes.status}`,
-                        })
-                      }
-                    >
-                      <View
-                        style={{ flex: 1, marginLeft: 10, paddingVertical: 5 }}
-                      >
-                        <Text style={{ color: "orange" }}>
-                          {item.attributes.status}
-                        </Text>
-                        <Text style={{ color: "red" }}>
-                          COMPLETE YOUR ORDER
-                        </Text>
-                        {dishes.map((dish) => (
-                          <View key={dish.id}>
-                            <Text style={{ fontSize: 18, fontWeight: "500" }}>
-                              {dish.restaurantName} restaurant name
-                            </Text>
-                            <Text style={{ color: "grey" }}>
-                              {dish.restaurantAddress}
-                            </Text>
-                          </View>
-                        ))}
+      <SafeAreaView style={styles.safeContainer}>
+        <View
+          style={{
+            flex: 1,
+            flexDirection: "column",
+            justifyContent: "space-around",
+            alignItems: "center",
+            backgroundColor: colors.light_gray,
 
-                        <Text style={{ marginTop: 10 }}>Delivery Details:</Text>
-                        <Text style={{ color: "grey" }}>
-                          {item.attributes.userName}
-                        </Text>
-                        <Text style={{ color: "grey" }}>
-                          {item.attributes.address}
-                        </Text>
-                        <Text style={{ color: "grey" }}>
-                          {item.attributes.buildinginfo}
-                        </Text>
-                      </View>
-
-                      <View
-                        style={{
-                          padding: 5,
-                          backgroundColor: "#3FC060",
-                          borderBottomRightRadius: 10,
-                          borderTopRightRadius: 10,
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}
-                      >
-                        <Entypo
-                          name="check"
-                          size={30}
-                          color="white"
-                          style={{ marginLeft: "auto" }}
-                        />
-                      </View>
-                    </Pressable>
-                  );
-                }}
-              />
-            ) : (
-              <Text>No Orders</Text>
-            )}
-          </BottomSheet>
-        ) : (
-          <BottomSheet index={1} ref={bottomSheetRef} snapPoints={snapPoints}>
-            <View style={{ alignItems: "center", marginBottom: 30 }}>
-              <Text
-                style={{
-                  fontSize: 20,
-                  fontWeight: "600",
-                  letterSpacing: 0.5,
-                  paddingBottom: 5,
-                }}
-              >
-                You're Online
-              </Text>
-              <Text style={{ letterSpacing: 0.5, color: "grey" }}>
-                Available Orders: {result.length}
-              </Text>
-            </View>
-
-            {/* {READY_ORDERS} */}
-            {result ? (
-              <BottomSheetFlatList
-                data={result}
-                renderItem={({ item }) => {
-                  return (
-                    <Pressable
-                      style={{
-                        flexDirection: "row",
-                        margin: 10,
-                        borderColor: "#3FC060",
-                        borderWidth: 2,
-                        borderRadius: 12,
-                      }}
-                      onPress={() => AlertButton(item)}
-                    >
-                      <View
-                        style={{ flex: 1, marginLeft: 10, paddingVertical: 5 }}
-                      >
-                        <Text style={{ color: "green" }}>
-                          {item.attributes.status}
-                        </Text>
-                        {dishes.map((dish) => (
-                          <View key={dish.id}>
-                            <Text style={{ fontSize: 18, fontWeight: "500" }}>
-                              {dish.restaurantName} restaurant Name
-                            </Text>
-                            <Text style={{ color: "grey" }}>
-                              {dish.restaurantAddress} restaurant Address
-                            </Text>
-                          </View>
-                        ))}
-
-                        <Text style={{ marginTop: 10 }}>Delivery Details:</Text>
-                        <Text style={{ color: "grey" }}>
-                          {item.attributes.userName}
-                        </Text>
-                        <Text style={{ color: "grey" }}>
-                          {item.attributes.address}
-                        </Text>
-                        <Text style={{ color: "grey" }}>
-                          {item.attributes.buildinginfo}
-                        </Text>
-                      </View>
-                      <View
-                        style={{
-                          padding: 5,
-                          backgroundColor: "#3FC060",
-                          borderBottomRightRadius: 10,
-                          borderTopRightRadius: 10,
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}
-                      >
-                        <Entypo
-                          name="check"
-                          size={30}
-                          color="white"
-                          style={{ marginLeft: "auto" }}
-                        />
-                      </View>
-                    </Pressable>
-                  );
-                }}
-              />
-            ) : (
-              <Text>No Orders</Text>
-            )}
-          </BottomSheet>
-        )}
-      </View>
+            //alignItems: "stretch",
+            //margin: 20,
+          }}
+        >
+          <View
+            style={{
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <Text style={styles.networkTitle}>No Internet connection.</Text>
+            <Text style={styles.networkText}>
+              Please check your internet connection and then refresh the page.
+            </Text>
+          </View>
+          <View>
+            <Image source={noNetworkImg} style={{ width: 305, height: 159 }} />
+          </View>
+          <View>
+            <Button
+              label="Refresh"
+              radius={10}
+              txtSize={14}
+              padSizeY={28}
+              bgColor={colors.slate}
+              padSizeX={14}
+              borderWidth={0}
+              fontFam="CircularStdBold"
+              txtDecorationLine="none"
+              onPress={() => refetch()}
+            />
+          </View>
+        </View>
+      </SafeAreaView>
     );
-  } else {
+  }
+
+  if (data) {
+    //console.log(data);
+    const {
+      courier: {
+        data: {
+          attributes: { restaurant_order },
+        },
+      },
+    } = data;
+    //  console.log(restaurant_order);
     return (
-      <View style={{ justifyContent: "center", alignItems: "center", flex: 1 }}>
-        <Text>No jobs.</Text>
-      </View>
+      <SafeAreaView style={styles.safeContainer}>
+        <View style={{ flex: 1, paddingTop: 20 }}>
+          <Pressable
+            style={{
+              flexDirection: "row",
+              margin: 10,
+              borderColor: "#3FC060",
+              borderWidth: 2,
+              borderRadius: 12,
+            }}
+            onPress={() =>
+              AlertButton(restaurant_order.data.id, restaurant_order)
+            }
+          >
+            <View style={{ flex: 1, marginLeft: 10, paddingVertical: 5 }}>
+              <Text style={{ color: "green" }}>ITISHA FOOD</Text>
+              <Text style={{ color: "orange" }}>
+                {restaurant_order.data.attributes.status}
+              </Text>
+              {isActivated ? (
+                <Text style={{ color: "red" }}>COMPLETE YOUR ORDER</Text>
+              ) : (
+                <Text style={{ color: "red" }}>NEW ORDER</Text>
+              )}
+              <Text style={{ marginTop: 10, color: "black" }}>
+                Delivery Details:
+              </Text>
+              <View style={{ flexDirection: "row" }}>
+                <Text
+                  style={{
+                    fontSize: 18,
+                    fontWeight: "500",
+                    color: "black",
+                    width: "50%",
+                  }}
+                >
+                  Customer Name:
+                </Text>
+                <Text
+                  style={{
+                    fontSize: 18,
+                    fontWeight: "500",
+                    color: "black",
+                    width: "50%",
+                  }}
+                >
+                  {restaurant_order.data.attributes.userName}
+                </Text>
+              </View>
+
+              <View style={{ flexDirection: "row" }}>
+                <Text
+                  style={{
+                    fontSize: 18,
+                    fontWeight: "500",
+                    color: "black",
+                    width: "50%",
+                  }}
+                >
+                  Building:
+                </Text>
+                <Text
+                  style={{
+                    fontSize: 18,
+                    fontWeight: "500",
+                    color: "black",
+                    width: "50%",
+                  }}
+                >
+                  {restaurant_order.data.attributes.buildinginfo}
+                </Text>
+              </View>
+
+              <View style={{ flexDirection: "row" }}>
+                <Text
+                  style={{
+                    fontSize: 18,
+                    fontWeight: "500",
+                    color: "black",
+                    width: "50%",
+                  }}
+                >
+                  Flat:
+                </Text>
+                <Text
+                  style={{
+                    fontSize: 18,
+                    fontWeight: "500",
+                    color: "black",
+                    width: "50%",
+                  }}
+                >
+                  {restaurant_order.data.attributes.Flat}
+                </Text>
+              </View>
+              <Text style={{ marginTop: 10, color: "black" }}>
+                Food details:
+              </Text>
+              {restaurant_order.data.attributes.dishes.map((dish) => (
+                <View key={dish.id}>
+                  <Text style={{ color: "grey" }}>
+                    {dish.attributes.dishName}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          </Pressable>
+        </View>
+      </SafeAreaView>
     );
   }
 };
 
 export default OrdersScreen;
+const styles = StyleSheet.create({
+  activity: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  networkText: {
+    fontFamily: "CircularStdBook",
+    fontSize: 16,
+    lineHeight: 25,
+  },
+  networkTitle: {
+    fontFamily: "CircularStdBold",
+    fontSize: 24,
+    marginBottom: 0,
+  },
+  safeContainer: { backgroundColor: colors.light_gray, flex: 1 },
+});
