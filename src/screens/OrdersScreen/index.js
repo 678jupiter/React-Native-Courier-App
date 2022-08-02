@@ -167,15 +167,15 @@ const OrdersScreen = ({ navigation }) => {
   const { loading, error, data, refetch } = useQuery(GET_MY_JOBS, {
     variables: { id },
   });
-  // useFocusEffect(
-  //   React.useCallback(() => {
-  //     let isActive = true;
-  //     refetch();
-  //     return () => {
-  //       isActive = false;
-  //     };
-  //   }, [navigation])
-  // );
+  useFocusEffect(
+    React.useCallback(() => {
+      let isActive = true;
+      refetch();
+      return () => {
+        isActive = false;
+      };
+    }, [navigation])
+  );
 
   if (loading) {
     return (

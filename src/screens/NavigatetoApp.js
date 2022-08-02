@@ -170,6 +170,16 @@ const NavigatetoApp = ({ route, navigation }) => {
         });
     };
 
+    const AlertButton = () =>
+      Alert.alert("Deliver to Customer", "", [
+        {
+          text: "Cancel",
+          onPress: () => console.log("Cancel Pressed"),
+          style: "cancel",
+        },
+        { text: "OK", onPress: () => startDelivering() },
+      ]);
+
     const startDelivering = async () => {
       await authAxios
         .put(`restaurant-orders/${id}`, {
@@ -188,6 +198,15 @@ const NavigatetoApp = ({ route, navigation }) => {
         });
     };
 
+    const AlertArrived = () =>
+      Alert.alert("Have You Arrived?", "", [
+        {
+          text: "Cancel",
+          onPress: () => console.log("Cancel Pressed"),
+          style: "cancel",
+        },
+        { text: "Yes", onPress: () => Arrived() },
+      ]);
     const Arrived = async () => {
       await authAxios
         .put(`restaurant-orders/${id}`, {
@@ -206,6 +225,16 @@ const NavigatetoApp = ({ route, navigation }) => {
           console.log(error);
         });
     };
+
+    const AlertDelivered = () =>
+      Alert.alert(`Have You Delivered to ${customerName}`, "", [
+        {
+          text: "Cancel",
+          onPress: () => console.log("Cancel Pressed"),
+          style: "cancel",
+        },
+        { text: "Yes", onPress: () => Delivered() },
+      ]);
     const Delivered = async () => {
       await authAxios
         .put(`restaurant-orders/${id}`, {
@@ -418,7 +447,7 @@ const NavigatetoApp = ({ route, navigation }) => {
                 onPress={() => PickUp()}
               >
                 <Text style={styles.textStyle}>
-                  Go T {restaurantDataName} Restaurant
+                  Go To {restaurantDataName} Restaurant
                 </Text>
               </Pressable>
             </View>
@@ -508,7 +537,9 @@ const NavigatetoApp = ({ route, navigation }) => {
                 style={[styles.button2, styles.buttonClose2]}
                 onPress={() => navigateToRestaurant()}
               >
-                <Text style={styles.textStyle}>Pick Up Delivery</Text>
+                <Text style={styles.textStyle2}>
+                  Go To {restaurantDataName} Restaurant
+                </Text>
               </Pressable>
             </View>
             <View
@@ -523,7 +554,7 @@ const NavigatetoApp = ({ route, navigation }) => {
             <View style={styles.PressableView}>
               <Pressable
                 style={[styles.button, styles.buttonClose]}
-                onPress={() => startDelivering()}
+                onPress={() => AlertButton()}
               >
                 <Text style={styles.textStyle}>Start Delivery</Text>
               </Pressable>
@@ -613,7 +644,7 @@ const NavigatetoApp = ({ route, navigation }) => {
                 style={[styles.button2, styles.buttonClose2]}
                 onPress={() => navigateToCustomer()}
               >
-                <Text style={styles.textStyle}>Continue Delivering</Text>
+                <Text style={styles.textStyle2}>Continue Delivering</Text>
               </Pressable>
             </View>
             <View
@@ -627,8 +658,8 @@ const NavigatetoApp = ({ route, navigation }) => {
             </View>
             <View style={styles.PressableView}>
               <Pressable
-                style={[styles.button, styles.buttonClose]}
-                onPress={() => Arrived()}
+                style={[styles.button, styles.buttonClose3]}
+                onPress={() => AlertArrived()}
               >
                 <Text style={styles.textStyle}>Arrived</Text>
               </Pressable>
@@ -711,7 +742,7 @@ const NavigatetoApp = ({ route, navigation }) => {
             <View style={styles.PressableView}>
               <Pressable
                 style={[styles.button, styles.buttonClose]}
-                onPress={() => Delivered()}
+                onPress={() => AlertDelivered()}
               >
                 <Text style={styles.textStyle}>Finish Delivery</Text>
               </Pressable>
@@ -837,6 +868,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+  buttonClose3: {
+    backgroundColor: "green",
+    justifyContent: "center",
+    alignItems: "center",
+  },
   button2: {
     borderRadius: 20,
     padding: 10,
@@ -853,6 +889,12 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     textAlign: "center",
     fontSize: 28,
+  },
+  textStyle2: {
+    color: "white",
+    fontWeight: "bold",
+    textAlign: "center",
+    fontSize: 22,
   },
   statusText: {
     //  backgroundColor: "green",
