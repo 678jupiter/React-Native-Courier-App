@@ -95,10 +95,14 @@ const LogIn = ({ navigation }) => {
             setIsSubmitting(false);
           })
           .catch((error) => {
+            setIsSubmitting(false);
+
             console.log(`Get Couries${error}`);
           });
       })
       .catch((error) => {
+        setIsSubmitting(false);
+
         console.log(`Login ${error}`);
       });
   };

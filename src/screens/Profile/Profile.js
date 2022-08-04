@@ -10,7 +10,7 @@ import { useSelector } from "react-redux";
 
 const Profile = () => {
   const user = useSelector((state) => state.cur.curmeta);
-  // console.log(user);
+  const Uemail = useSelector((state) => state.user.usermeta);
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
@@ -41,14 +41,14 @@ const Profile = () => {
           </Text>
         </View>
         <View>
-          <Text style={{ fontSize: 18, color: "black" }}>email</Text>
+          <Text style={{ fontSize: 18, color: "black" }}>{Uemail.email}</Text>
         </View>
-        <View style={{ flexDirection: "row" }}>
+        {/* <View style={{ flexDirection: "row" }}>
           <Text style={{ marginRight: 6, fontSize: 18, color: "black" }}>
             Completed Jobs
           </Text>
           <Text style={{ fontSize: 18, color: "black" }}>0</Text>
-        </View>
+        </View> */}
       </View>
     </SafeAreaView>
   );

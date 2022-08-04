@@ -16,6 +16,8 @@ import axios from "axios";
 import noNetworkImg from "../../../assets/images/noNetwork.png";
 import { Button } from "../../../components/atoms";
 import { useFocusEffect } from "@react-navigation/native";
+import * as Location from "expo-location";
+import { getPreciseDistance } from "geolib";
 
 const GET_MY_JOBS = gql`
   query ($id: ID!) {
@@ -57,26 +59,68 @@ const OrdersScreen = ({ navigation }) => {
       Authorization: `Bearer ${token.jwt}`,
     },
   });
+  useEffect(() => {
+    (async () => {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        alert("Permission to access location was denied");
+        return;
+      }
 
-  const getCourierDistanceBetween = async () => {
+      let location = await Location.getCurrentPositionAsync({});
+      console.log(location);
+      let myLatitude = location.latitude;
+      let myLongitude = location.longitude;
+      // setLocation(location);
+      var pdis = getPreciseDistance(
+        {
+          latitude: Number(restaurantData.rLat),
+          longitude: Number(restaurantData.rLng),
+        },
+        {
+          latitude: Number(myLatitude),
+          longitude: Number(myLongitude),
+        }
+      );
+      updateCourierDistance(Number(pdis / 1000));
+    })();
+  }, []);
+
+  const updateCourierDistance = async (item) => {
     await authAxios
-      .get(`couriers/${courierData.cid}`)
+      .put(`couriers/${courierData.cid} `, {
+        data: {
+          distanceFromRestaurant: Number(item),
+        },
+      })
       .then((res) => {
-        const {
-          data: {
-            attributes: { distanceFromRestaurant },
-          },
-        } = res.data;
-        console.log(distanceFromRestaurant);
-        console.log("Recieved distance between");
+        console.log(
+          "Updated courier distance betwwen restaurant and Cur Redux"
+        );
       })
       .catch((error) => {
-        console.log(`Failure @ Distance between${error}`);
+        console.log(`distance between update failed ${error}`);
       });
   };
-  useEffect(() => {
-    getCourierDistanceBetween();
-  }, []);
+  // const getCourierDistanceBetween = async () => {
+  //   await authAxios
+  //     .get(`couriers/${courierData.cid}`)
+  //     .then((res) => {
+  //       const {
+  //         data: {
+  //           attributes: { distanceFromRestaurant },
+  //         },
+  //       } = res.data;
+  //       console.log(distanceFromRestaurant);
+  //       console.log("Recieved distance between");
+  //     })
+  //     .catch((error) => {
+  //       console.log(`Failure @ Distance between${error}`);
+  //     });
+  // };
+  // useEffect(() => {
+  //   getCourierDistanceBetween();
+  // }, []);
 
   const AlertButton = (item, restaurant_order) =>
     Alert.alert("Accept Order", "", [
@@ -245,7 +289,44 @@ const OrdersScreen = ({ navigation }) => {
         },
       },
     } = data;
-    //  console.log(restaurant_order);
+    //console.log(restaurant_order);
+
+    if (restaurant_order.data === null) {
+      return (
+        <SafeAreaView style={styles.safeContainer}>
+          <View style={{ flex: 1, paddingTop: 20 }}>
+            <View
+              style={{
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 20,
+                  fontWeight: "bold",
+                  fontStyle: "italic",
+                }}
+              >
+                {restaurantData.rname}
+              </Text>
+            </View>
+
+            <View
+              style={{
+                flex: 1,
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <Text style={{ fontSize: 20 }}>
+                You have no jobs at the moment.
+              </Text>
+            </View>
+          </View>
+        </SafeAreaView>
+      );
+    }
 
     if (restaurant_order.data.attributes.status === "Ready") {
       return (
@@ -940,7 +1021,9 @@ const OrdersScreen = ({ navigation }) => {
                 alignItems: "center",
               }}
             >
-              <Text style={{ fontSize: 20 }}>You have no jobs Available.</Text>
+              <Text style={{ fontSize: 20 }}>
+                You have no jobs at the moment.
+              </Text>
             </View>
           </View>
         </SafeAreaView>
