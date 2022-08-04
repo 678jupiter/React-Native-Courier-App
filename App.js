@@ -9,6 +9,7 @@ import { useState } from "react";
 import { useFonts } from "expo-font";
 import FakeApp from "./fakeApp";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import ImageUpload from "./ImageUpload";
 
 const client = new ApolloClient({
   uri: "https://myfoodcms189.herokuapp.com/graphql",
@@ -53,6 +54,7 @@ export default function App() {
           <ApolloProvider client={client}>
             <GestureHandlerRootView style={{ flex: 1 }}>
               <FakeApp />
+              {/* <ImageUpload /> */}
             </GestureHandlerRootView>
             <StatusBar style="auto" />
           </ApolloProvider>

@@ -8,6 +8,8 @@ import {
   Pressable,
   ActivityIndicator,
   Image,
+  Modal,
+  ImageBackground,
 } from "react-native";
 import React, { useState } from "react";
 import { useSelector } from "react-redux";
@@ -25,7 +27,9 @@ import noNetworkImg from "../../assets/images/noNetwork.png";
 import { Button } from "../../components/atoms";
 import call from "react-native-phone-call";
 import { useFocusEffect } from "@react-navigation/native";
-
+import * as ImagePicker from "expo-image-picker";
+import mime from "mime";
+import { MaterialIcons } from "@expo/vector-icons";
 const GET_JOB_STATUS = gql`
   query ($id: ID!) {
     restaurantOrder(id: $id) {
@@ -54,25 +58,29 @@ const NavigatetoApp = ({ route, navigation }) => {
   const { Odishes } = route.params;
   const [init, setInite] = useState(0);
   const [driverLocation, setDriverLocation] = useState(null);
-
+  const [modalVisible, setModalVisible] = useState(false);
   const [distance, setDistance] = useState();
   const [isDriverClose, setIsDriverClose] = useState(false);
   const restaurantData = useSelector((state) => state.myres.aboutRes);
   const token = useSelector((state) => state.token.userToken);
-
+  const [imageUri, setImageUri] = useState("");
+  const [loadingPickUp, setLoadingPickUp] = useState(false);
+  const [loadingDelivery, setLoadingDelivery] = useState(false);
+  const [loadingArrived, setLoadingArrived] = useState(false);
+  const [takePhotoLoading, setTakePhotoLoading] = useState(false);
   const { loading, error, data, refetch } = useQuery(GET_JOB_STATUS, {
     variables: { id },
   });
 
-  useFocusEffect(
-    React.useCallback(() => {
-      let isActive = true;
-      refetch();
-      return () => {
-        isActive = false;
-      };
-    }, [navigation])
-  );
+  // useFocusEffect(
+  //   React.useCallback(() => {
+  //     let isActive = true;
+  //     refetch();
+  //     return () => {
+  //       isActive = false;
+  //     };
+  //   }, [navigation])
+  // );
 
   if (loading) {
     return (
@@ -151,8 +159,15 @@ const NavigatetoApp = ({ route, navigation }) => {
         Authorization: `Bearer ${token.jwt}`,
       },
     });
-
+    const authAxios2 = axios.create({
+      baseURL: `https://myfoodcms189.herokuapp.com/api/`,
+      headers: {
+        Authorization: `Bearer ${token.jwt}`,
+        "Content-Type": "multipart/form-data",
+      },
+    });
     const PickUp = async () => {
+      setLoadingPickUp(true);
       await authAxios
         .put(`restaurant-orders/${id}`, {
           data: {
@@ -164,9 +179,11 @@ const NavigatetoApp = ({ route, navigation }) => {
           console.log("res");
           requestPermissions();
           navigateToRestaurant();
+          setLoadingPickUp(false);
         })
         .catch(function (error) {
           console.log(error);
+          setLoadingPickUp(false);
         });
     };
 
@@ -181,6 +198,7 @@ const NavigatetoApp = ({ route, navigation }) => {
       ]);
 
     const startDelivering = async () => {
+      setLoadingDelivery(true);
       await authAxios
         .put(`restaurant-orders/${id}`, {
           data: {
@@ -192,8 +210,11 @@ const NavigatetoApp = ({ route, navigation }) => {
           console.log("res");
           // requestPermissions();
           navigateToCustomer();
+          setLoadingDelivery(false);
         })
         .catch(function (error) {
+          setLoadingDelivery(true);
+
           console.log(error);
         });
     };
@@ -208,6 +229,7 @@ const NavigatetoApp = ({ route, navigation }) => {
         { text: "Yes", onPress: () => Arrived() },
       ]);
     const Arrived = async () => {
+      setLoadingArrived(true);
       await authAxios
         .put(`restaurant-orders/${id}`, {
           data: {
@@ -218,22 +240,26 @@ const NavigatetoApp = ({ route, navigation }) => {
           refetch();
           console.log("res");
           console.log("close");
+          setLoadingArrived(false);
+
           // TaskManager.unregisterAllTasksAsync();
           // dispatch(activeOrderActions.notActive());
         })
         .catch(function (error) {
+          setLoadingArrived(false);
+
           console.log(error);
         });
     };
 
     const AlertDelivered = () =>
-      Alert.alert(`Have You Delivered to ${customerName}`, "", [
+      Alert.alert(`Have You Delivered to ${customerName}?`, "", [
         {
           text: "Cancel",
           onPress: () => console.log("Cancel Pressed"),
           style: "cancel",
         },
-        { text: "Yes", onPress: () => Delivered() },
+        { text: "Yes", onPress: () => openModal() },
       ]);
     const Delivered = async () => {
       await authAxios
@@ -244,6 +270,9 @@ const NavigatetoApp = ({ route, navigation }) => {
         })
         .then(function (response) {
           refetch();
+          setTakePhotoLoading(false);
+          setModalVisible(false);
+
           // TaskManager.unregisterAllTasksAsync();
           //dispatch(activeOrderActions.notActive());
         })
@@ -251,7 +280,59 @@ const NavigatetoApp = ({ route, navigation }) => {
           console.log(error);
         });
     };
+    const openModal = () => {
+      setModalVisible(true);
+    };
+    const captureImage = async () => {
+      setTakePhotoLoading(true);
+      // No permissions request is necessary for launching the image library
+      let result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.All,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 1,
+      });
+      if (!result.cancelled) {
+        var uuri = result.uri;
+        setImageUri(uuri);
+        const newImageUri = "file:///" + uuri.split("file:/").join("");
+        const formData = new FormData();
 
+        formData.append("files", {
+          uri: newImageUri,
+          type: mime.getType(newImageUri),
+          name: newImageUri.split("/").pop(),
+        });
+        authAxios2
+          .post("upload", formData)
+          .then((res) => {
+            console.log("Done with Upload");
+            const [
+              {
+                formats: {
+                  medium: { url },
+                },
+              },
+            ] = res.data;
+            authAxios
+              .put(`restaurant-orders/${id}`, {
+                data: {
+                  deliveryImage: url,
+                },
+              })
+              .then((res) => {
+                console.log("Done with Put");
+                Delivered();
+              })
+              .catch((error) => {
+                console.log(` update order image${error}`);
+              });
+          })
+          .catch((error) => {
+            console.log(`upload ${error}`);
+          });
+      }
+    };
     // check whetehr coDriv is Close to the custo
 
     const checkLocationStatus = async () => {
@@ -442,14 +523,20 @@ const NavigatetoApp = ({ route, navigation }) => {
               ))}
             </View>
             <View style={styles.PressableView}>
-              <Pressable
-                style={[styles.button, styles.buttonClose]}
-                onPress={() => PickUp()}
-              >
-                <Text style={styles.textStyle}>
-                  Go To {restaurantDataName} Restaurant
-                </Text>
-              </Pressable>
+              {loadingPickUp ? (
+                <Pressable style={[styles.button, styles.buttonClose]}>
+                  <ActivityIndicator color="white" size="large" />
+                </Pressable>
+              ) : (
+                <Pressable
+                  style={[styles.button, styles.buttonClose]}
+                  onPress={() => PickUp()}
+                >
+                  <Text style={styles.textStyle}>
+                    Go To {restaurantDataName} Restaurant
+                  </Text>
+                </Pressable>
+              )}
             </View>
           </View>
         </SafeAreaView>
@@ -552,12 +639,18 @@ const NavigatetoApp = ({ route, navigation }) => {
               <Text style={{ fontSize: 20 }}>OR</Text>
             </View>
             <View style={styles.PressableView}>
-              <Pressable
-                style={[styles.button, styles.buttonClose]}
-                onPress={() => AlertButton()}
-              >
-                <Text style={styles.textStyle}>Start Delivery</Text>
-              </Pressable>
+              {loadingDelivery ? (
+                <Pressable style={[styles.button, styles.buttonClose]}>
+                  <ActivityIndicator color="white" size="large" />
+                </Pressable>
+              ) : (
+                <Pressable
+                  style={[styles.button, styles.buttonClose]}
+                  onPress={() => AlertButton()}
+                >
+                  <Text style={styles.textStyle}>Start Delivery</Text>
+                </Pressable>
+              )}
             </View>
           </View>
         </SafeAreaView>
@@ -657,12 +750,18 @@ const NavigatetoApp = ({ route, navigation }) => {
               <Text style={{ fontSize: 20 }}>OR</Text>
             </View>
             <View style={styles.PressableView}>
-              <Pressable
-                style={[styles.button, styles.buttonClose3]}
-                onPress={() => AlertArrived()}
-              >
-                <Text style={styles.textStyle}>Arrived</Text>
-              </Pressable>
+              {loadingArrived ? (
+                <Pressable style={[styles.button, styles.buttonClose3]}>
+                  <ActivityIndicator color="white" size="large" />
+                </Pressable>
+              ) : (
+                <Pressable
+                  style={[styles.button, styles.buttonClose3]}
+                  onPress={() => AlertArrived()}
+                >
+                  <Text style={styles.textStyle}>Arrived</Text>
+                </Pressable>
+              )}
             </View>
           </View>
         </SafeAreaView>
@@ -748,6 +847,43 @@ const NavigatetoApp = ({ route, navigation }) => {
               </Pressable>
             </View>
           </View>
+          <Modal
+            animationType="slide"
+            transparent={true}
+            visible={modalVisible}
+            onRequestClose={() => {
+              setModalVisible(!modalVisible);
+            }}
+          >
+            <View style={styles.centeredView}>
+              <View style={styles.modalView}>
+                <View style={{ flex: 1, marginRight: 10, marginLeft: 10 }}>
+                  <View style={styles.avaContainer}>
+                    <ImageBackground
+                      source={{
+                        uri: imageUri,
+                      }}
+                      style={styles.avatar}
+                    ></ImageBackground>
+                  </View>
+                  <View style={{ flex: 0.5, justifyContent: "center" }}>
+                    {takePhotoLoading ? (
+                      <Pressable style={[styles.button, styles.buttonClose]}>
+                        <ActivityIndicator color="white" size="large" />
+                      </Pressable>
+                    ) : (
+                      <Pressable
+                        style={[styles.button, styles.buttonClose]}
+                        onPress={() => captureImage()}
+                      >
+                        <Text style={styles.textStyle}>Take Photo</Text>
+                      </Pressable>
+                    )}
+                  </View>
+                </View>
+              </View>
+            </View>
+          </Modal>
         </SafeAreaView>
       );
     }
@@ -755,72 +891,32 @@ const NavigatetoApp = ({ route, navigation }) => {
       return (
         <SafeAreaView style={styles.safe}>
           <View style={styles.body}>
-            <View style={styles.statusView}>
-              <Text style={styles.statusText}>{status}</Text>
-            </View>
-            <View style={styles.userNameView}>
-              <View style={styles.secondUsernameView}>
-                <Feather
-                  name="user"
-                  size={26}
-                  color="black"
-                  style={{ width: "10%" }}
-                />
-                <Text style={{ width: "50%" }}>{customerName}</Text>
+            <View style={{ flex: 0.5, justifyContent: "center" }}>
+              <Text style={{ textAlign: "center" }}> Well Done.</Text>
+              <Text style={{ textAlign: "center" }}>
+                You Have Successfully Completed The Delivery.{" "}
+              </Text>
+              <View
+                style={{
+                  backgroundColor: "green",
+                  alignSelf: "center",
+                  height: "40%",
+                  width: "40%",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  borderRadius: 240,
+                  marginTop: 10,
+                }}
+              >
+                <MaterialIcons name="done" size={140} color="white" />
               </View>
             </View>
-            <View style={styles.addressView}>
-              <View style={styles.secondAdrressView}>
-                <Entypo
-                  name="address"
-                  size={26}
-                  color="black"
-                  style={{ width: "10%" }}
-                />
-                <Text style={{ width: "50%" }}>{address}</Text>
-              </View>
-            </View>
-
-            <View style={styles.buildingView}>
-              <View style={styles.secondBuildingView}>
-                <FontAwesome
-                  name="building"
-                  size={26}
-                  color="black"
-                  style={{ width: "10%" }}
-                />
-                <Text style={{ width: "50%" }}>{building}</Text>
-              </View>
-            </View>
-
-            <View style={styles.flatView}>
-              <Text>{Flat}</Text>
-            </View>
-
-            <View style={styles.callView}>
-              <View style={styles.secondCallView}>
-                <Ionicons
-                  name="ios-call-sharp"
-                  size={34}
-                  color="green"
-                  style={{ width: "20%" }}
-                  onPress={() =>
-                    call({ number: `${customermobilenumber}`, prompt: false })
-                  }
-                />
-
-                <Text style={{ width: "50%" }}>{customermobilenumber}</Text>
-              </View>
-            </View>
-            <View style={styles.dishesView}>
-              <Text style={{ color: "grey" }}> Food details:</Text>
-              {Odishes.map((item, i) => (
-                <View key={i}>
-                  <Text>{item.attributes.dishName}</Text>
-                </View>
-              ))}
-            </View>
-            <View style={styles.PressableView}>
+            <View
+              style={{
+                flex: 0.5,
+                backgroundColor: "white",
+              }}
+            >
               <Pressable
                 style={[styles.button, styles.buttonClose]}
                 onPress={() => navigation.goBack()}
@@ -971,5 +1067,63 @@ const styles = StyleSheet.create({
     bottom: 0,
     alignItems: "center",
     justifyContent: "center",
+  },
+  centeredView: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    // marginTop: 22,
+  },
+  modalView: {
+    // margin: 20,
+    backgroundColor: "white",
+    borderRadius: 20,
+    // padding: 35,
+    height: "100%",
+    width: "100%",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  buttonM: {
+    borderRadius: 20,
+    padding: 10,
+    elevation: 2,
+  },
+  buttonOpen: {
+    backgroundColor: "#F194FF",
+  },
+  buttonClose: {
+    backgroundColor: "#2196F3",
+  },
+  textStyleM: {
+    color: "white",
+    fontWeight: "bold",
+    textAlign: "center",
+  },
+  modalText: {
+    marginBottom: 15,
+    textAlign: "center",
+  },
+  avaContainer: {
+    flex: 0.5,
+    alignItems: "center",
+    // paddingTop: 10,
+    justifyContent: "center",
+    //paddingBottom: 10,
+    // backgroundColor: "red",
+  },
+  avatar: {
+    overflow: "hidden",
+    // borderRadius: 180,
+    width: 230,
+    height: 230,
+    backgroundColor: "grey",
   },
 });
