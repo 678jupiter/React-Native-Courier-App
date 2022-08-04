@@ -101,7 +101,7 @@ const Register = () => {
         imageLocalUri: imagePlace,
       })
     );
-    setIsSubmitting(true);
+    setIsSubmitting(false);
     navigation.navigate("phoneNumberV");
   };
 

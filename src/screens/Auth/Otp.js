@@ -43,7 +43,8 @@ const Otp = ({ route, navigation }) => {
     let username = fakeUser.firstName;
     let email = fakeUser.email;
     let password = fakeUser.password;
-    let mobileNumber = phoneNumber;
+    let newStr = phoneNumber.replace("+254", "");
+    let mobileNumber = newStr;
     var func_User_Id = "";
     var func_UserName = "";
     var func_UserImage = "";
@@ -122,7 +123,7 @@ const Otp = ({ route, navigation }) => {
                       firstName: func_UserName,
                       secondName: fakeUser.secondName,
                       users_permissions_user: func_User_Id,
-                      mobileNumber: phoneNumber,
+                      mobileNumber: newStr,
                       active: true,
                       image: imageId,
                     },
@@ -223,7 +224,7 @@ const Otp = ({ route, navigation }) => {
           <Text>{info}</Text>
         </>
       ) : null}
-      <Button title="GLOBAL" onPress={() => globallFunction()} />
+      {/* <Button title="GLOBAL" onPress={() => globallFunction()} /> */}
     </SafeAreaView>
   );
 };

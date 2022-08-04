@@ -38,30 +38,26 @@ const PhoneNumber = ({ navigation }) => {
           if (res.ok === true) {
             navigation.navigate("otp", { phoneNumber: formattedValue });
           } else {
-            alert("Phone Number Error");
+            setLoading(false);
+            alert("Please try again.");
           }
         })
         .catch((error) => {
-          alert("Phone Number Error");
+          setLoading(false);
+          alert("Please try again.");
         });
     } catch (error) {
       setLoading(false);
-
-      alert("Phone Numer Error");
+      alert("Please try again.");
       return false;
     }
   };
   const validateNumber = () => {
-    if (value.length < 9 || value.length > 10) {
+    if (value.length < 10 || value.length > 10) {
       setShowMessage(true);
     } else {
-      //  sendSmsVerification();
-      proceed();
+      sendSmsVerification();
     }
-  };
-
-  const proceed = () => {
-    navigation.navigate("otp", { phoneNumber: formattedValue });
   };
 
   return (
@@ -76,7 +72,9 @@ const PhoneNumber = ({ navigation }) => {
               marginTop: 20,
             }}
           >
-            <Text>Verify your phone number.</Text>
+            <Text style={{ fontStyle: "italic", fontWeight: "bold" }}>
+              Verify your phone number.
+            </Text>
           </View>
 
           <View
@@ -87,7 +85,10 @@ const PhoneNumber = ({ navigation }) => {
             }}
           >
             {showMessage && (
-              <Text style={{ color: "red" }}>Phone number is incorrect</Text>
+              <Text style={{ color: "red" }}>
+                Phone number is incorrect. Must include 10 digits eg 07XXXXXXXX
+                OR 01XXXXXXXX
+              </Text>
             )}
             <Space height={10} />
             <PhoneInput

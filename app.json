@@ -1,14 +1,14 @@
 {
   "expo": {
-    "name": "driver",
-    "slug": "driver",
+    "name": "Itisha Food Courier",
+    "slug": "Courier",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "splash": {
       "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "resizeMode": "cover",
+      "backgroundColor": "#635BFF"
     },
     "updates": {
       "fallbackToCacheTimeout": 0
@@ -20,8 +20,15 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#FFFFFF"
-      }
+        "backgroundColor": "#635BFF"
+      },
+      "permissions": [
+        "CAMERA",
+        "ACCESS_FINE_LOCATION",
+        "CAMERA_ROLL",
+        "WRITE_EXTERNAL_STORAGE"
+      ],
+      "versionCode": 1
     },
     "web": {
       "favicon": "./assets/favicon.png"

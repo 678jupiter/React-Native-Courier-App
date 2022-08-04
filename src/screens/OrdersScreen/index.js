@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { gql, useQuery } from "@apollo/client";
 import Pressable from "react-native/Libraries/Components/Pressable/Pressable";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { colors, secondaryColor } from "../../../config";
 import axios from "axios";
 import noNetworkImg from "../../../assets/images/noNetwork.png";
@@ -18,6 +18,7 @@ import { Button } from "../../../components/atoms";
 import { useFocusEffect } from "@react-navigation/native";
 import * as Location from "expo-location";
 import { getPreciseDistance } from "geolib";
+import { resActions } from "../../../Redux/myRestSlice";
 
 const GET_MY_JOBS = gql`
   query ($id: ID!) {
@@ -52,6 +53,7 @@ const OrdersScreen = ({ navigation }) => {
   const token = useSelector((state) => state.token.userToken);
   const courierData = useSelector((state) => state.cur.curmeta);
   const restaurantData = useSelector((state) => state.myres.aboutRes);
+  const dispatch = useDispatch();
 
   const authAxios = axios.create({
     baseURL: "https://myfoodcms189.herokuapp.com/api/",
@@ -59,6 +61,40 @@ const OrdersScreen = ({ navigation }) => {
       Authorization: `Bearer ${token.jwt}`,
     },
   });
+  const getRestaurantLocation = async () => {
+    await authAxios
+      .get(`my-restaurants/1`)
+      .then((res) => {
+        const {
+          data: {
+            attributes: {
+              Latitude,
+              Longitude,
+              ppkm,
+              tN,
+              name,
+              restaurantMobileN,
+            },
+          },
+        } = res.data;
+        dispatch(
+          resActions.addRes({
+            rLat: Latitude,
+            rLng: Longitude,
+            rppkem: ppkm,
+            tnn: tN,
+            rname: name,
+            rmn: restaurantMobileN,
+          })
+        );
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  };
+  useEffect(() => {
+    getRestaurantLocation();
+  }, [navigation]);
   useEffect(() => {
     (async () => {
       let { status } = await Location.requestForegroundPermissionsAsync();
@@ -68,10 +104,8 @@ const OrdersScreen = ({ navigation }) => {
       }
 
       let location = await Location.getCurrentPositionAsync({});
-      console.log(location);
-      let myLatitude = location.latitude;
-      let myLongitude = location.longitude;
-      // setLocation(location);
+      let myLatitude = location.coords.latitude;
+      let myLongitude = location.coords.longitude;
       var pdis = getPreciseDistance(
         {
           latitude: Number(restaurantData.rLat),
@@ -82,11 +116,12 @@ const OrdersScreen = ({ navigation }) => {
           longitude: Number(myLongitude),
         }
       );
+      console.log(pdis);
       updateCourierDistance(Number(pdis / 1000));
     })();
-  }, []);
-
+  }, [navigation]);
   const updateCourierDistance = async (item) => {
+    console.log(item);
     await authAxios
       .put(`couriers/${courierData.cid} `, {
         data: {
