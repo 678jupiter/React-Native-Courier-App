@@ -139,6 +139,7 @@ const Otp = ({ route, navigation }) => {
                           firstName,
                           active,
                           image,
+                          email,
                         },
                       },
                     } = res.data;
@@ -150,6 +151,7 @@ const Otp = ({ route, navigation }) => {
                         secondName: secondName,
                         firstName: firstName,
                         active: active,
+                        email: email,
                       })
                     );
 

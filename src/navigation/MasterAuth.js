@@ -12,6 +12,18 @@ import NavigatetoApp from "../screens/NavigatetoApp";
 import { colors, primaryColor } from "../../config";
 import ProfileImage from "../screens/Auth/ProfileImage";
 import ForgotPassword from "../screens/Auth/ForgotPassword";
+import { createDrawerNavigator } from "@react-navigation/drawer";
+import Profile from "../screens/Profile/Profile";
+const Drawer = createDrawerNavigator();
+
+function DrawerNav() {
+  return (
+    <Drawer.Navigator initialRouteName="Home">
+      <Drawer.Screen name="Home" component={OrdersScreen} />
+      <Drawer.Screen name="Account" component={Profile} />
+    </Drawer.Navigator>
+  );
+}
 
 const MsemaKweli = () => {
   const Stack = createNativeStackNavigator();
@@ -44,6 +56,15 @@ const MsemaKweli = () => {
       >
         {isLoggedIn ? (
           <>
+            <Stack.Screen
+              name="draw"
+              component={DrawerNav}
+              options={{
+                headerShown: false,
+                animationTypeForReplace: "pop",
+                title: "Home",
+              }}
+            />
             <Stack.Screen
               name="OrdersScreen"
               options={{
