@@ -11,7 +11,7 @@ import MsemaKweli from "../navigation/MasterAuth";
 import * as TaskManager from "expo-task-manager";
 import { getPreciseDistance } from "geolib";
 import { resActions } from "../../Redux/myRestSlice";
-import { curActions } from "../../Redux/courSlice";
+import { RAWEN } from "@env";
 
 // Instruct SplashScreen not to hide yet, we want to do this manually
 SplashScreen.preventAutoHideAsync().catch(() => {
@@ -53,7 +53,7 @@ function AnimatedSplashScreen({ children, image }) {
   const courierData = useSelector((state) => state.cur.curmeta);
   //console.log(courierData);
   const authAxios = axios.create({
-    baseURL: "https://myfoodcms189.herokuapp.com/api/",
+    baseURL: `${RAWEN}`,
     headers: {
       Authorization: `Bearer ${token.jwt}`,
     },

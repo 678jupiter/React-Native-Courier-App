@@ -18,6 +18,7 @@ import axios from "axios";
 import mime from "mime";
 import { curActions } from "../../../Redux/courSlice";
 import { fakeuserActions } from "../../../Redux/holderslice";
+import { RTYQW, RAWEN } from "@env";
 
 const Otp = ({ route, navigation }) => {
   const [message, setMessage] = useState();
@@ -52,7 +53,7 @@ const Otp = ({ route, navigation }) => {
 
     var func_SecondName = "";
     axios
-      .post(`https://myfoodcms189.herokuapp.com/api/auth/local/register`, {
+      .post(`${RTYQW}`, {
         username,
         email,
         password,
@@ -87,7 +88,7 @@ const Otp = ({ route, navigation }) => {
           name: newImageUri.split("/").pop(),
         });
         const authAxios2 = axios.create({
-          baseURL: `https://myfoodcms189.herokuapp.com/api/`,
+          baseURL: `${RAWEN}`,
           headers: {
             Authorization: `Bearer ${func_Jwt}`,
             "Content-Type": "multipart/form-data",
@@ -107,7 +108,7 @@ const Otp = ({ route, navigation }) => {
             func_UserImage = url;
 
             const authAxios = axios.create({
-              baseURL: `https://myfoodcms189.herokuapp.com/api/`,
+              baseURL: `${RAWEN}`,
               headers: {
                 Authorization: `Bearer ${func_Jwt}`,
               },

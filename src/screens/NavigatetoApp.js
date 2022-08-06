@@ -30,6 +30,8 @@ import { useFocusEffect } from "@react-navigation/native";
 import * as ImagePicker from "expo-image-picker";
 import mime from "mime";
 import { MaterialIcons } from "@expo/vector-icons";
+import { RAWEN } from "@env";
+
 const GET_JOB_STATUS = gql`
   query ($id: ID!) {
     restaurantOrder(id: $id) {
@@ -154,13 +156,13 @@ const NavigatetoApp = ({ route, navigation }) => {
     };
 
     const authAxios = axios.create({
-      baseURL: "https://myfoodcms189.herokuapp.com/api/",
+      baseURL: `${RAWEN}`,
       headers: {
         Authorization: `Bearer ${token.jwt}`,
       },
     });
     const authAxios2 = axios.create({
-      baseURL: `https://myfoodcms189.herokuapp.com/api/`,
+      baseURL: `${RAWEN}`,
       headers: {
         Authorization: `Bearer ${token.jwt}`,
         "Content-Type": "multipart/form-data",

@@ -20,6 +20,7 @@ import { authActions } from "../../../Redux/AuthSlice";
 import { tokenActions } from "../../../Redux/tokenSlice";
 import axios from "axios";
 import { curActions } from "../../../Redux/courSlice";
+import { WTAYE, HAGSF } from "@env";
 
 const LogIn = ({ navigation }) => {
   const [identifier, setEmail] = useState("");
@@ -32,7 +33,7 @@ const LogIn = ({ navigation }) => {
     setIsSubmitting(true);
     let userId = "";
     axios
-      .post(`https://myfoodcms189.herokuapp.com/api/auth/local/`, {
+      .post(`${WTAYE}`, {
         identifier: identifier,
         password: password,
       })
@@ -59,7 +60,7 @@ const LogIn = ({ navigation }) => {
         );
 
         axios
-          .get(`https://myfoodcms189.herokuapp.com/api/couriers/?populate=*`)
+          .get(`${HAGSF}?populate=*`)
           .then((res) => {
             const { data } = res.data;
             //  console.log(data);

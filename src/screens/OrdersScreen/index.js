@@ -19,6 +19,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import * as Location from "expo-location";
 import { getPreciseDistance } from "geolib";
 import { resActions } from "../../../Redux/myRestSlice";
+import { RAWEN } from "@env";
 
 const GET_MY_JOBS = gql`
   query ($id: ID!) {
@@ -56,7 +57,7 @@ const OrdersScreen = ({ navigation }) => {
   const dispatch = useDispatch();
 
   const authAxios = axios.create({
-    baseURL: "https://myfoodcms189.herokuapp.com/api/",
+    baseURL: `${RAWEN}`,
     headers: {
       Authorization: `Bearer ${token.jwt}`,
     },

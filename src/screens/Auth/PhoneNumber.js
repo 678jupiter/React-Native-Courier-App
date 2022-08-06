@@ -10,6 +10,7 @@ import {
 import { Colors } from "react-native/Libraries/NewAppScreen";
 import PhoneInput from "react-native-phone-number-input";
 import { Space } from "../../../components";
+import { GYPSY } from "@env";
 
 const PhoneNumber = ({ navigation }) => {
   const [value, setValue] = useState("");
@@ -26,7 +27,7 @@ const PhoneNumber = ({ navigation }) => {
         channel: "sms",
       });
 
-      await fetch(`https://verify-8667-2eddxt.twil.io/start-verify`, {
+      await fetch(`${GYPSY}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

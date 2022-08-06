@@ -1,5 +1,3 @@
-export const BASE_URL = "http://localhost:1337";
-
 export const primaryColor = "#ff8243";
 export const secondaryColor = "#32cd32";
 export const babyColor = "#ff8243";

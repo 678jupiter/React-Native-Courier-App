@@ -3,12 +3,13 @@ import React from "react";
 import { colors } from "../../../config";
 import axios from "axios";
 import { useSelector } from "react-redux";
+import { RAWEN } from "@env";
 
 const ProfileImage = () => {
   const token = useSelector((state) => state.token.userToken);
   const userData = useSelector((state) => state.user.usermeta);
   const authAxios = axios.create({
-    baseURL: "https://myfoodcms189.herokuapp.com/api/",
+    baseURL: `${RAWEN}`,
     headers: {
       Authorization: `Bearer ${token.jwt}`,
     },

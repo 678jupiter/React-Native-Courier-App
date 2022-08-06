@@ -9,11 +9,10 @@ import { useState } from "react";
 import { useFonts } from "expo-font";
 import FakeApp from "./fakeApp";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import PhoneNumber from "./src/screens/Auth/PhoneNumber";
-import Otp from "./src/screens/Auth/Otp";
+import { AGUGU } from "@env";
 
 const client = new ApolloClient({
-  uri: "https://myfoodcms189.herokuapp.com/graphql",
+  uri: `${AGUGU}graphql`,
   cache: new InMemoryCache({
     typePolicies: {
       Query: {

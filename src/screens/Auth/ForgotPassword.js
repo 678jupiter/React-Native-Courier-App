@@ -3,6 +3,7 @@ import { useState } from "react";
 import { View, Text, StyleSheet, SafeAreaView } from "react-native";
 import { TextInput, Button, Space } from "../../../components";
 import { MsgBox, primaryColor, colors } from "../../../config";
+import { YAQW } from "@env";
 
 export default function ForgotPassword({ navigation }) {
   const [submitting, setSubmitting] = useState(false);
@@ -14,7 +15,7 @@ export default function ForgotPassword({ navigation }) {
   const send = () => {
     setIsSubmitting(true);
     axios
-      .post("https://myfoodcms189.herokuapp.com/api/auth/forgot-password", {
+      .post(`${YAQW}`, {
         email: email, // user's email
       })
       .then((response) => {
