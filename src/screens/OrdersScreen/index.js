@@ -346,9 +346,7 @@ const OrdersScreen = ({ navigation }) => {
                 alignItems: "center",
               }}
             >
-              <Text style={{ fontSize: 20 }}>
-                You have no jobs at the moment.
-              </Text>
+              <Text style={{ fontSize: 20 }}>No Jobs At The Moment.</Text>
             </View>
           </View>
         </SafeAreaView>
@@ -1048,9 +1046,7 @@ const OrdersScreen = ({ navigation }) => {
                 alignItems: "center",
               }}
             >
-              <Text style={{ fontSize: 20 }}>
-                You have no jobs at the moment.
-              </Text>
+              <Text style={{ fontSize: 20 }}>No Jobs At The Moment.</Text>
             </View>
           </View>
         </SafeAreaView>
@@ -1083,7 +1079,7 @@ const OrdersScreen = ({ navigation }) => {
                 alignItems: "center",
               }}
             >
-              <Text style={{ fontSize: 20 }}>You have no jobs Available.</Text>
+              <Text style={{ fontSize: 20 }}>No Jobs At The Moment.</Text>
             </View>
           </View>
         </SafeAreaView>
