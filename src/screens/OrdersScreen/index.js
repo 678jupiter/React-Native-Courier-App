@@ -87,29 +87,38 @@ const OrdersScreen = ({ navigation }) => {
             rmn: restaurantMobileN,
           })
         );
+        getRequestForLoc(Latitude, Longitude);
       })
       .catch((error) => {
         console.log(error);
       });
   };
-  useEffect(() => {
-    getRestaurantLocation();
-  }, [navigation]);
-  useEffect(() => {
-    (async () => {
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") {
-        alert("Permission to access location was denied");
-        return;
-      }
 
+  useFocusEffect(
+    React.useCallback(() => {
+      let isActive = true;
+      console.log("UseEffect");
+      getRestaurantLocation();
+      return () => {
+        isActive = false;
+      };
+    }, [navigation])
+  );
+
+  const getRequestForLoc = async (Latitude, Longitude) => {
+    let { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== "granted") {
+      alert("Permission to access location was denied");
+      return;
+    }
+    if (status === "granted") {
       let location = await Location.getCurrentPositionAsync({});
       let myLatitude = location.coords.latitude;
       let myLongitude = location.coords.longitude;
       var pdis = getPreciseDistance(
         {
-          latitude: Number(restaurantData.rLat),
-          longitude: Number(restaurantData.rLng),
+          latitude: Number(Latitude),
+          longitude: Number(Longitude),
         },
         {
           latitude: Number(myLatitude),
@@ -118,8 +127,9 @@ const OrdersScreen = ({ navigation }) => {
       );
       console.log(pdis);
       updateCourierDistance(Number(pdis / 1000));
-    })();
-  }, [navigation]);
+    }
+  };
+
   const updateCourierDistance = async (item) => {
     console.log(item);
     await authAxios
@@ -137,25 +147,6 @@ const OrdersScreen = ({ navigation }) => {
         console.log(`distance between update failed ${error}`);
       });
   };
-  // const getCourierDistanceBetween = async () => {
-  //   await authAxios
-  //     .get(`couriers/${courierData.cid}`)
-  //     .then((res) => {
-  //       const {
-  //         data: {
-  //           attributes: { distanceFromRestaurant },
-  //         },
-  //       } = res.data;
-  //       console.log(distanceFromRestaurant);
-  //       console.log("Recieved distance between");
-  //     })
-  //     .catch((error) => {
-  //       console.log(`Failure @ Distance between${error}`);
-  //     });
-  // };
-  // useEffect(() => {
-  //   getCourierDistanceBetween();
-  // }, []);
 
   const AlertButton = (item, restaurant_order) =>
     Alert.alert("Accept Order", "", [

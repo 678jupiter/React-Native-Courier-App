@@ -72,15 +72,15 @@ const NavigatetoApp = ({ route, navigation }) => {
     variables: { id },
   });
 
-  // useFocusEffect(
-  //   React.useCallback(() => {
-  //     let isActive = true;
-  //     refetch();
-  //     return () => {
-  //       isActive = false;
-  //     };
-  //   }, [navigation])
-  // );
+  useFocusEffect(
+    React.useCallback(() => {
+      let isActive = true;
+      refetch();
+      return () => {
+        isActive = false;
+      };
+    }, [navigation])
+  );
 
   if (loading) {
     return (
@@ -507,11 +507,11 @@ const NavigatetoApp = ({ route, navigation }) => {
                   color="green"
                   style={{ width: "20%" }}
                   onPress={() =>
-                    call({ number: `${customermobilenumber}`, prompt: false })
+                    call({ number: `0${customermobilenumber}`, prompt: false })
                   }
                 />
 
-                <Text style={{ width: "50%" }}>{customermobilenumber}</Text>
+                <Text style={{ width: "50%" }}>0{customermobilenumber}</Text>
               </View>
             </View>
             <View style={styles.dishesView}>
@@ -599,11 +599,11 @@ const NavigatetoApp = ({ route, navigation }) => {
                   color="green"
                   style={{ width: "20%" }}
                   onPress={() =>
-                    call({ number: `${customermobilenumber}`, prompt: false })
+                    call({ number: `0${customermobilenumber}`, prompt: false })
                   }
                 />
 
-                <Text style={{ width: "50%" }}>{customermobilenumber}</Text>
+                <Text style={{ width: "50%" }}>0{customermobilenumber}</Text>
               </View>
             </View>
             <View style={styles.dishesView}>
@@ -712,11 +712,11 @@ const NavigatetoApp = ({ route, navigation }) => {
                   color="green"
                   style={{ width: "20%" }}
                   onPress={() =>
-                    call({ number: `${customermobilenumber}`, prompt: false })
+                    call({ number: `0${customermobilenumber}`, prompt: false })
                   }
                 />
 
-                <Text style={{ width: "50%" }}>{customermobilenumber}</Text>
+                <Text style={{ width: "50%" }}>0{customermobilenumber}</Text>
               </View>
             </View>
             <View style={styles.dishesView}>
@@ -823,11 +823,11 @@ const NavigatetoApp = ({ route, navigation }) => {
                   color="green"
                   style={{ width: "20%" }}
                   onPress={() =>
-                    call({ number: `${customermobilenumber}`, prompt: false })
+                    call({ number: `0${customermobilenumber}`, prompt: false })
                   }
                 />
 
-                <Text style={{ width: "50%" }}>{customermobilenumber}</Text>
+                <Text style={{ width: "50%" }}>0{customermobilenumber}</Text>
               </View>
             </View>
             <View style={styles.dishesView}>
