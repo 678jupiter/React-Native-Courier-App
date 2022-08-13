@@ -10,6 +10,14 @@
       "resizeMode": "cover",
       "backgroundColor": "#635BFF"
     },
+    "plugins": [
+      [
+        "expo-notifications",
+        {
+          "sounds": ["./assets/audio/notify.wav"]
+        }
+      ]
+    ],
     "updates": {
       "fallbackToCacheTimeout": 0
     },
@@ -25,6 +33,7 @@
       "permissions": [
         "CAMERA",
         "ACCESS_FINE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
         "CAMERA_ROLL",
         "WRITE_EXTERNAL_STORAGE"
       ],

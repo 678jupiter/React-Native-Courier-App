@@ -30,12 +30,15 @@ function AnimatedAppLoader({ children, image }) {
   const [isSplashReady, setSplashReady] = useState(false);
 
   useEffect(() => {
+    let isActive = true;
     async function prepare() {
       await Asset.fromModule(image).downloadAsync();
       setSplashReady(true);
     }
-
     prepare();
+    return () => {
+      isActive = false;
+    };
   }, [image]);
 
   if (!isSplashReady) {
@@ -92,7 +95,11 @@ function AnimatedSplashScreen({ children, image }) {
       });
   };
   useEffect(() => {
+    let isActive = true;
     getRestaurantLocation();
+    return () => {
+      isActive = false;
+    };
   }, []);
 
   const animation = useMemo(() => new Animated.Value(1), []);
@@ -142,6 +149,7 @@ function AnimatedSplashScreen({ children, image }) {
       });
   };
   useEffect(() => {
+    let isActive = true;
     if (isAppReady) {
       Animated.timing(animation, {
         toValue: 0,
@@ -149,6 +157,9 @@ function AnimatedSplashScreen({ children, image }) {
         useNativeDriver: true,
       }).start(() => setAnimationComplete(true));
     }
+    return () => {
+      isActive = false;
+    };
   }, [isAppReady]);
 
   const onImageLoaded = useCallback(async () => {

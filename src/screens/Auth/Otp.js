@@ -37,6 +37,8 @@ const Otp = ({ route, navigation }) => {
   };
   const token = useSelector((state) => state.token.userToken);
   const userData = useSelector((state) => state.user.usermeta);
+  const wawa = phoneNumber.replace("+254", "");
+  const systemNumber = wawa.substring(1);
 
   const globallFunction = () => {
     setIsSubmitting(true);
@@ -125,6 +127,7 @@ const Otp = ({ route, navigation }) => {
                       secondName: fakeUser.secondName,
                       users_permissions_user: func_User_Id,
                       mobileNumber: newStr,
+                      systemNumber: systemNumber,
                       active: true,
                       image: imageId,
                     },

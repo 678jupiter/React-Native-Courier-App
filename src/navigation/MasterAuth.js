@@ -14,15 +14,71 @@ import ProfileImage from "../screens/Auth/ProfileImage";
 import ForgotPassword from "../screens/Auth/ForgotPassword";
 import { createDrawerNavigator } from "@react-navigation/drawer";
 import Profile from "../screens/Profile/Profile";
+import io from "socket.io-client";
+import { useEffect } from "react";
+import { socks } from "@env";
+import * as Notifications from "expo-notifications";
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+  }),
+});
 const Drawer = createDrawerNavigator();
 
 function DrawerNav() {
+  const socket = io(`${socks}`);
+  const user = useSelector((state) => state.cur.curmeta);
+
+  function showRoom() {
+    console.log(`joined room id ${user.cid}`);
+  }
+
+  useEffect(() => {
+    let isCancelled = false;
+    const hookup = async () => {
+      const input = `${user.cid}`;
+      socket.emit("enter_conversation_space", input, showRoom);
+    };
+    hookup();
+    return () => {
+      isCancelled = true;
+    };
+  }, []);
+  socket.on("welcome", () => {
+    console.log("Welcome");
+  });
+  socket.on("bye", () => {
+    console.log("Courier left ");
+  });
+
+  function addMessage(message) {
+    // console.log(message);
+    console.log("Play Notificationssss");
+    schedulePushNotification(); // New order
+  }
+  socket.on("new_conversation_message", addMessage);
+
   return (
     <Drawer.Navigator initialRouteName="Home">
       <Drawer.Screen name="Home" component={OrdersScreen} />
       <Drawer.Screen name="Account" component={Profile} />
     </Drawer.Navigator>
   );
+}
+async function schedulePushNotification() {
+  await Notifications.scheduleNotificationAsync({
+    content: {
+      title: "Delivery",
+      body: "You have a new delivery",
+      data: { data: "goes here" },
+      sound: "notify.wav",
+      vibrate: true,
+    },
+    trigger: { seconds: 0, repeats: false },
+  });
 }
 
 const MsemaKweli = () => {

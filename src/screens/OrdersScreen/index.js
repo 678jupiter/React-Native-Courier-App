@@ -20,6 +20,7 @@ import * as Location from "expo-location";
 import { getPreciseDistance } from "geolib";
 import { resActions } from "../../../Redux/myRestSlice";
 import { RAWEN } from "@env";
+import * as Notifications from "expo-notifications";
 
 const GET_MY_JOBS = gql`
   query ($id: ID!) {
@@ -149,6 +150,10 @@ const OrdersScreen = ({ navigation }) => {
       });
   };
 
+  const AcceptAndCloseNotification = (item, restaurant_order) => {
+    Notifications.cancelAllScheduledNotificationsAsync();
+    AlertButton(item, restaurant_order);
+  };
   const AlertButton = (item, restaurant_order) =>
     Alert.alert("Accept Order", "", [
       {
@@ -479,7 +484,12 @@ const OrdersScreen = ({ navigation }) => {
               <Pressable
                 style={[styles.button, styles.buttonClose]}
                 onPress={() =>
-                  AlertButton(restaurant_order.data.id, restaurant_order)
+                  //  AlertButton(restaurant_order.data.id, restaurant_order)
+
+                  AcceptAndCloseNotification(
+                    restaurant_order.data.id,
+                    restaurant_order
+                  )
                 }
               >
                 <Text style={styles.textStyle}>Accept delivery</Text>
