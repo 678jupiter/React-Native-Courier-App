@@ -80,8 +80,8 @@ async function schedulePushNotification() {
       title: "Delivery",
       body: "You have a new delivery",
       data: { data: "goes here" },
-      sound: "notify.wav",
-      vibrate: true,
+      sound: true,
+      vibrate: false,
     },
     trigger: { seconds: 0, repeats: false },
   });

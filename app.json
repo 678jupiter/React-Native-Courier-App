@@ -14,7 +14,8 @@
       [
         "expo-notifications",
         {
-          "sounds": ["./assets/audio/notify.wav"]
+          "icon": "./assets/adaptive-icon.png",
+          "color": "#ffffff"
         }
       ]
     ],
@@ -34,7 +35,9 @@
         "CAMERA",
         "ACCESS_FINE_LOCATION",
         "CAMERA_ROLL",
-        "WRITE_EXTERNAL_STORAGE"
+        "WRITE_EXTERNAL_STORAGE",
+        "RECEIVE_BOOT_COMPLETED",
+        "SCHEDULE_EXACT_ALARM"
       ],
       "versionCode": 4,
       "package": "com.naivashadev.Courier"
