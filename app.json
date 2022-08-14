@@ -2,7 +2,7 @@
   "expo": {
     "name": "Itisha Food Courier",
     "slug": "Courier",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "splash": {
@@ -37,7 +37,7 @@
         "CAMERA_ROLL",
         "WRITE_EXTERNAL_STORAGE"
       ],
-      "versionCode": 2,
+      "versionCode": 3,
       "package": "com.naivashadev.Courier"
     },
     "web": {
