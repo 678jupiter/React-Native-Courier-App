@@ -1,7 +1,7 @@
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import { View } from "react-native";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import LogIn from "../screens/Auth/Login";
 import Register from "../screens/Auth/Register";
 import PhoneNumber from "../screens/Auth/PhoneNumber";
@@ -18,6 +18,7 @@ import io from "socket.io-client";
 import { useEffect } from "react";
 import { socks } from "@env";
 import * as Notifications from "expo-notifications";
+import { reRefetchActions } from "../../Redux/reRefetch";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -31,7 +32,7 @@ const Drawer = createDrawerNavigator();
 function DrawerNav() {
   const socket = io(`${socks}`);
   const user = useSelector((state) => state.cur.curmeta);
-
+  const dispatch = useDispatch();
   function showRoom() {
     console.log(`joined room id ${user.cid}`);
   }
@@ -57,6 +58,11 @@ function DrawerNav() {
   function addMessage(message) {
     // console.log(message);
     console.log("Play Notificationssss");
+    dispatch(
+      reRefetchActions.addreRefetch({
+        dig: 2,
+      })
+    );
     schedulePushNotification(); // New order
   }
   socket.on("new_conversation_message", addMessage);

@@ -4,7 +4,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Alert, Animated, StyleSheet, View, BackHandler } from "react-native";
 import * as Location from "expo-location";
-import BackGroundApp from "./BackgroudLocation";
+import MsemaKweli from "./src/navigation/MasterAuth";
 
 // Instruct SplashScreen not to hide yet, we want to do this manually
 SplashScreen.preventAutoHideAsync().catch(() => {
@@ -14,7 +14,7 @@ SplashScreen.preventAutoHideAsync().catch(() => {
 export default function FakeApp() {
   return (
     <AnimatedAppLoader image={require("./assets/splash.png")}>
-      <BackGroundApp />
+      <MsemaKweli />
     </AnimatedAppLoader>
   );
 }

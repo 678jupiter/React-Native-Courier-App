@@ -21,6 +21,7 @@ import { getPreciseDistance } from "geolib";
 import { resActions } from "../../../Redux/myRestSlice";
 import { RAWEN } from "@env";
 import * as Notifications from "expo-notifications";
+import { reRefetchActions } from "../../../Redux/reRefetch";
 
 const GET_MY_JOBS = gql`
   query ($id: ID!) {
@@ -53,10 +54,11 @@ const GET_MY_JOBS = gql`
 const OrdersScreen = ({ navigation }) => {
   const isActivated = useSelector((state) => state.active.isActive);
   const token = useSelector((state) => state.token.userToken);
+  const refreshdigit = useSelector((state) => state.reRefetch.reRefetchmeta);
   const courierData = useSelector((state) => state.cur.curmeta);
   const restaurantData = useSelector((state) => state.myres.aboutRes);
   const dispatch = useDispatch();
-
+  console.log(refreshdigit);
   const authAxios = axios.create({
     baseURL: `${RAWEN}`,
     headers: {
@@ -252,6 +254,21 @@ const OrdersScreen = ({ navigation }) => {
       };
     }, [navigation])
   );
+
+  useEffect(() => {
+    let isActive = true;
+    if (refreshdigit.dig === 2) {
+      refetch();
+      dispatch(
+        reRefetchActions.addreRefetch({
+          dig: 4,
+        })
+      );
+    }
+    return () => {
+      isActive = false;
+    };
+  }, [refreshdigit]);
 
   if (loading) {
     return (

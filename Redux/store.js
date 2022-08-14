@@ -11,6 +11,7 @@ import holderSlice from "./holderslice";
 import curSlice from "./courSlice";
 import resSlice from "./myRestSlice";
 import myLocationSlice from "./myLocationSlice";
+import reRefetchSlice from "./reRefetch";
 
 const persistConfig = {
   key: "ayee",
@@ -26,6 +27,7 @@ const reducers = combineReducers({
   active: activeOrderSlice.reducer,
   myres: resSlice.reducer,
   myloc: myLocationSlice.reducer,
+  reRefetch: reRefetchSlice.reducer,
 
   // other reducers goes here...
 });

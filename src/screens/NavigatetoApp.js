@@ -14,9 +14,6 @@ import {
 import React, { useState } from "react";
 import { useSelector } from "react-redux";
 import axios from "axios";
-import * as TaskManager from "expo-task-manager";
-import * as Location from "expo-location";
-import { getPreciseDistance } from "geolib";
 import { Entypo } from "@expo/vector-icons";
 import { FontAwesome } from "@expo/vector-icons";
 import { Feather } from "@expo/vector-icons";
@@ -178,8 +175,6 @@ const NavigatetoApp = ({ route, navigation }) => {
         })
         .then(function (response) {
           refetch();
-          console.log("res");
-          requestPermissions();
           navigateToRestaurant();
           setLoadingPickUp(false);
         })
@@ -336,114 +331,6 @@ const NavigatetoApp = ({ route, navigation }) => {
       }
     };
     // check whetehr coDriv is Close to the custo
-
-    const checkLocationStatus = async () => {
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") {
-        Alert.alert(`Permission to access location was denied`, "");
-
-        return;
-      }
-
-      if (status === "granted") {
-        let result = await Location.getCurrentPositionAsync({});
-
-        var pdis = getPreciseDistance(
-          {
-            latitude: Number(customerLatitude),
-            longitude: Number(customerLongitude),
-          },
-          {
-            latitude: Number(result.coords.latitude),
-            longitude: Number(result.coords.longitude),
-          }
-        );
-        // alert(`Precise Distance\n\n${pdis} Meter\nOR\n${pdis / 1000} KM`);
-        setDistance(Number(pdis / 1000));
-
-        if (Number(pdis / 1000) <= 0.1) {
-          setIsDriverClose(true);
-          Arrived();
-        }
-      }
-      if (status !== "granted") {
-        allowLocation();
-      }
-    };
-    const allowLocation = async () => {
-      let res = await Location.hasServicesEnabledAsync();
-      if (res === false) {
-        Alert.alert(`Please allow Location`, "", [
-          {
-            text: "cancel",
-            onPress: () => navigation.goBack(),
-            style: "cancel",
-          },
-          { text: "OK", onPress: () => Location.enableNetworkProviderAsync() },
-        ]);
-      }
-      if (res === true) {
-        return;
-      }
-    };
-
-    // useEffect(() => {
-    //   checkLocationStatus();
-    // }, []);
-
-    const LOCATION_TASK_NAME = "background-location-task";
-    const requestPermissions = async () => {
-      const { status } = await Location.requestBackgroundPermissionsAsync();
-      console.log(status);
-      if (status === "granted") {
-        // Location.requestBackgroundPermissionsAsync();
-        await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-          accuracy: Location.Accuracy.High,
-          distanceInterval: 0,
-          deferredUpdatesInterval: 0,
-          deferredUpdatesDistance: 0,
-          pausesUpdatesAutomatically: false,
-        });
-      }
-    };
-    TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }) => {
-      if (error) {
-        // Error occurred - check `error.message` for more details.
-        return;
-      }
-      if (data) {
-        const { locations } = data;
-        const [
-          {
-            coords: { latitude, longitude },
-          },
-        ] = locations;
-        setDriverLocation({
-          latitude: latitude,
-          longitude: longitude,
-        });
-        authAxios
-          .put(`restaurant-orders/${id}`, {
-            data: {
-              courierLat: JSON.stringify(latitude),
-              courierLng: JSON.stringify(longitude),
-            },
-          })
-          .then(function () {
-            console.log("Updated");
-          })
-          .catch(function (error) {
-            console.log(error);
-          });
-        let roomName = id;
-        const inputM = {
-          courierLat: JSON.stringify(latitude),
-          courierLng: JSON.stringify(longitude),
-        };
-      }
-    });
-
-    // Find Order By Id
 
     const {
       restaurantOrder: {
