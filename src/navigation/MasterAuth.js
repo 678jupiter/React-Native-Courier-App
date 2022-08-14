@@ -55,16 +55,14 @@ function DrawerNav() {
     console.log("Courier left ");
   });
 
-  function addMessage(message) {
-    // console.log(message);
-    console.log("Play Notificationssss");
+  const addMessage = async (message) => {
+    await schedulePushNotification();
     dispatch(
       reRefetchActions.addreRefetch({
         dig: 2,
       })
     );
-    schedulePushNotification(); // New order
-  }
+  };
   socket.on("new_conversation_message", addMessage);
 
   return (
@@ -80,8 +78,7 @@ async function schedulePushNotification() {
       title: "Delivery",
       body: "You have a new delivery",
       data: { data: "goes here" },
-      sound: true,
-      vibrate: false,
+      vibrate: true,
     },
     trigger: { seconds: 0, repeats: false },
   });
