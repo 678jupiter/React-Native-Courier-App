@@ -80,7 +80,7 @@ async function schedulePushNotification() {
       data: { data: "goes here" },
       vibrate: true,
     },
-    trigger: { seconds: 0, repeats: false },
+    trigger: { seconds: 1, repeats: false },
   });
 }
 
