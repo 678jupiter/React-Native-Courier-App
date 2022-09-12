@@ -14,8 +14,8 @@
  <table>
   <tr>
     <td>Find Route</td>
-     <td>Home Screen</td>
-     <td>Delivery Details</td>
+     <td>Route Found</td>
+     <td>Start Navigating</td>
   </tr>
   <tr>
     <td><img src="assets/screenshots/finding route.jpg" width=200 ></td>
@@ -38,8 +38,8 @@
  </table>
  <table>
   <tr>
-    <td>Finish Delivery</td>
-     <td>Take Photo</td>
+    <td>No Jobs</td>
+     <td>Navigator</td>
   </tr>
   <tr>
     <td><img src="assets/screenshots/noJobs.jpg" width=200 ></td>
