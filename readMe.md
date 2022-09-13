@@ -6,8 +6,8 @@
   </tr>
   <tr>
     <td><img src="assets/screenshots/SplashScreen.jpg" width=200 ></td>
-    <td><img src="assets/screenshots/HomeScreen.jpg" width=200 ></td>
-    <td><img src="assets/screenshots/startDelivery.jpg" width=200 ></td>
+    <td><img src="assets/screenshots/CHome.jpg" width=200 ></td>
+    <td><img src="assets/screenshots/Cstart.jpg" width=200 ></td>
   </tr>
  </table>
 
