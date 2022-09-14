@@ -40,9 +40,22 @@
   <tr>
     <td>No Jobs</td>
      <td>Navigator</td>
+     <td>Account</td>
   </tr>
   <tr>
     <td><img src="assets/screenshots/noJobs.jpg" width=200 ></td>
     <td><img src="assets/screenshots/sideBar.jpg" width=200 ></td>
+    <td><img src="assets/screenshots/Profile.jpg" width=200></td>
+  </tr>
+ </table>
+
+ <table>
+  <tr>
+    <td>Login</td>
+     <td>Accept</td>
+  </tr>
+  <tr>
+    <td><img src="assets/screenshots/Login.jpg" width=200 ></td>
+    <td><img src="assets/screenshots/Accept.jpg" width=200 ></td>
   </tr>
  </table>
