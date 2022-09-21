@@ -139,19 +139,6 @@ const NavigatetoApp = ({ route, navigation }) => {
     );
   }
   if (data) {
-    const navigateToCustomer = () => {
-      Linking.openURL(
-        `google.navigation:q=${customerLatitude}+${customerLongitude}`
-      );
-    };
-    const navigateToRestaurant = () => {
-      Linking.openURL(
-        `google.navigation:q=${Number(restaurantData.rLat)}+${Number(
-          restaurantData.rLng
-        )}`
-      );
-    };
-
     const authAxios = axios.create({
       baseURL: `${RAWEN}`,
       headers: {
